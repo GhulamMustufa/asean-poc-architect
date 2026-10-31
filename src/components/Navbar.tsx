@@ -35,7 +35,7 @@ export function Navbar({ currentView, onNavigate, onOpenStartupsModal }: NavbarP
             className="nav-link"
             onClick={onOpenStartupsModal}
           >
-            Startup Directory (32)
+            Startup Directory (14)
           </button>
 
           <button
