@@ -1,9 +1,8 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
-import { MatchResult } from '@/types';
-import { generateStructuredProposal } from '@/lib/proposalGenerator';
+import React, { useEffect } from 'react';
 import { scrollToTop } from '@/lib/scroll';
+import { useGenerateProposal } from '@/hooks/useGenerateProposal';
 import { useAppStore, appStore, type AppView } from '@/stores/appStore';
 import { Navbar } from '@/components/Navbar';
 import { DashboardView } from '@/components/DashboardView';
@@ -25,7 +24,7 @@ export default function Home() {
   const { navigate, hydrate, submitChallenge, openProposal, saveProposal, openDirectory, closeDirectory } =
     appStore.getState();
 
-  const [isGeneratingProposal, setIsGeneratingProposal] = useState(false);
+  const generateProposal = useGenerateProposal();
 
   // Load stored proposals and metrics on client mount
   useEffect(() => {
@@ -35,55 +34,6 @@ export default function Home() {
   const goTo = (next: AppView) => {
     navigate(next);
     scrollToTop();
-  };
-
-  const handleSelectStartupForProposal = async (match: MatchResult) => {
-    if (!challenge) return;
-    setIsGeneratingProposal(true);
-
-    const snapshot = () => ({
-      challenge,
-      startup: match.startup,
-      matchScore: match.overallScore,
-      matchReasons: match.matchReasons,
-      matchedCapabilities: match.matchedCapabilities,
-      capabilityGaps: match.capabilityGaps,
-      generatedAt: new Date().toISOString()
-    });
-
-    try {
-      // Call server-side AI generation route
-      const response = await fetch('/api/proposals/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          challenge,
-          startupId: match.startup.id,
-          providerPreference: 'gemini'
-        })
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        if (data.success && data.result?.proposal) {
-          const generatedProposal = data.result.proposal;
-          generatedProposal.sourceSnapshot = snapshot();
-          saveProposal(generatedProposal);
-          setIsGeneratingProposal(false);
-          goTo('proposal');
-          return;
-        }
-      }
-      throw new Error('Server route returned non-success response');
-    } catch (e) {
-      console.warn('[Page] Server generation failed or offline, executing client-side fallback orchestrator:', e);
-      // Client-side fallback to guarantee zero demo failure
-      const fallbackProposal = generateStructuredProposal(challenge, match.startup);
-      fallbackProposal.sourceSnapshot = snapshot();
-      saveProposal(fallbackProposal);
-      setIsGeneratingProposal(false);
-      goTo('proposal');
-    }
   };
 
   return (
@@ -122,9 +72,9 @@ export default function Home() {
           <MatchResultsView
             challenge={challenge}
             matches={matches}
-            onSelectStartup={handleSelectStartupForProposal}
+            onSelectStartup={(match) => generateProposal.mutate(match)}
             onBackToChallenge={() => navigate('new-challenge')}
-            isGeneratingProposal={isGeneratingProposal}
+            isGeneratingProposal={generateProposal.isPending}
           />
         )}
 
