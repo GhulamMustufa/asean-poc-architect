@@ -14,7 +14,15 @@ export function Navbar({ currentView, onNavigate, onOpenStartupsModal }: NavbarP
   return (
     <nav className="navbar">
       <div className="navbar-inner">
-        <div className="brand-group" role="button" onClick={() => onNavigate('dashboard')} style={{ cursor: 'pointer' }}>
+        <div className="brand-group" role="button" onClick={() => onNavigate('dashboard')} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/favicon.png"
+            alt="ASEAN POC-Architect Logo"
+            width={30}
+            height={30}
+            style={{ borderRadius: '7px', boxShadow: '0 0 10px rgba(56, 189, 248, 0.3)' }}
+          />
           <span className="brand-logo-badge">ASEAN</span>
           <span className="brand-title">POC-Architect</span>
           <span className="brand-tag">Pilot Platform</span>
