@@ -10,6 +10,34 @@ import { ALL_STARTUPS } from '@/data/startups';
 import { CountryFlag } from '@/components/CountryFlag';
 import { PilotProposal, PipelineMetrics, ProposalStatus } from '@/types';
 import { downloadProposalPdf } from '@/lib/pdfExport';
+import Image from 'next/image';
+import {
+  ArrowRight,
+  ChevronRight,
+  ClipboardList,
+  Download,
+  FileSignature,
+  Globe2,
+  PencilLine,
+  Plus,
+  Scale,
+  Sparkles,
+  Target,
+} from 'lucide-react';
+import { ASEAN_LOGO_SRC } from '@/data/aseanCountries';
+import { Button } from '@/components/ui/button';
+import { NumberTicker } from '@/components/ui/number-ticker';
+import { Reveal, RevealItem } from '@/components/Reveal';
+import { HeroGlobe } from '@/components/HeroGlobe';
+import { usePrefersReducedMotion } from '@/hooks/useMediaQuery';
+
+const STEPS = [
+  { icon: ClipboardList, tone: 'bg-asean-blue/15 text-accent-blue', title: 'Describe your problem', body: 'Tell us the business challenge, your country, and your timeline.' },
+  { icon: Target, tone: 'bg-asean-blue/15 text-accent-blue', title: 'Accurate matching', body: 'Real and sample startups are scored on skills, experience, and data safety.' },
+  { icon: Scale, tone: 'bg-asean-yellow/15 text-accent-amber', title: 'Clear reasons why', body: 'Honest scores: what each startup can do, and what it cannot do yet.' },
+  { icon: Sparkles, tone: 'bg-foreground/10 text-foreground', title: 'Generate a pilot plan', body: 'A ready 60-day roadmap with team responsibilities and success goals.' },
+  { icon: FileSignature, tone: 'bg-asean-red/15 text-accent-red', title: 'Review, sign off, export', body: 'Edit with your team, record approval, and download a clean PDF.' },
+];
 
 interface DashboardViewProps {
   metrics: PipelineMetrics;
@@ -20,7 +48,6 @@ interface DashboardViewProps {
 }
 
 export function DashboardView({
-  metrics,
   proposals,
   onStartNewPoc,
   onOpenProposal,
@@ -29,6 +56,7 @@ export function DashboardView({
   const [statusFilter, setStatusFilter] = useState<'All' | ProposalStatus>('All');
   const openDirectory = useAppStore((s) => s.openDirectory);
   const flagCounts = useMemo(() => countStartupsByCountry(ALL_STARTUPS), []);
+  const reduceMotion = usePrefersReducedMotion();
 
   // Filter proposals by selected status tab
   const filteredProposals = proposals.filter((p) => {
@@ -49,100 +77,78 @@ export function DashboardView({
     { value: 'Rejected', label: 'Rejected', count: rejectedCount },
   ];
 
+  const metricCards: { label: string; value: number; sub: string; color?: string }[] = [
+    { label: 'Total saved projects', value: proposals.length, sub: 'Active pilot proposals' },
+    { label: 'Under team review', value: underReviewCount, sub: 'Needs manager sign-off', color: 'var(--accent-amber)' },
+    { label: 'Approved pilots', value: approvedCount, sub: 'Ready to start', color: 'var(--accent-cyan)' },
+    { label: 'Draft proposals', value: draftsCount, sub: 'In-progress planning' },
+    { label: 'Startups in directory', value: ALL_STARTUPS.length, sub: 'SG · MY · ID · VN · TH · PH' },
+  ];
+
   return (
     <div>
-      {/* Hero Section */}
-      <section className="hero-section">
-        <div className="hero-pill">
-          <span>🌏 Southeast Asia Innovation Platform</span>
-        </div>
+      {/* Hero: one headline, one gradient phrase, one red primary action */}
+      <section className="dash-hero grid items-center gap-10 pb-6 pt-10 md:grid-cols-[1.15fr_0.85fr] md:pt-16">
+        <Reveal className="flex flex-col items-center text-center md:items-start md:text-left">
+          <p className="mb-5 inline-flex items-center gap-2 rounded-full border border-asean-yellow/40 bg-asean-yellow/10 px-3.5 py-1 text-xs font-semibold text-accent-amber">
+            <Globe2 className="size-3.5" aria-hidden /> Southeast Asia innovation platform
+          </p>
+          <h1 className="text-balance text-[2.25rem] font-bold leading-[1.08] tracking-[-0.035em] text-foreground md:text-[3.5rem]">
+            Match business challenges with <span className="gradient-text">verified ASEAN</span> tech startups.
+          </h1>
+          <p className="mt-5 max-w-xl text-pretty text-base leading-relaxed text-text-secondary md:text-lg">
+            See exactly why a startup fits, generate a complete pilot plan, and review it with your team.
+          </p>
+          <div className="mt-8 flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
+            <Button variant="cta" size="lg" className="rounded-full" onClick={onStartNewPoc}>
+              <Plus aria-hidden /> Match a business problem
+            </Button>
+            <Button variant="ghost" size="lg" className="rounded-full" onClick={onOpenStartupsModal}>
+              Browse {ALL_STARTUPS.length} startups <ArrowRight aria-hidden />
+            </Button>
+          </div>
+        </Reveal>
 
-        <h1 className="hero-title">
-          Connect your business challenges with <span className="gradient-text">verified ASEAN tech startups</span>.
-        </h1>
-
-        <p className="hero-subtitle">
-          Find the right technology partner in minutes. See exactly why a startup matches your needs, generate a complete pilot plan, and review it with your team.
-        </p>
-
-        <div className="hero-actions">
-          <button type="button" className="btn btn-primary btn-lg" onClick={onStartNewPoc}>
-            <span>+</span> Match a Business Problem
-          </button>
-
-          <button type="button" className="btn btn-secondary btn-lg" onClick={onOpenStartupsModal}>
-            Browse Startup Directory ({ALL_STARTUPS.length})
-          </button>
+        <div className="relative mx-auto hidden w-full max-w-[460px] md:block">
+          {reduceMotion ? (
+            <div className="flex aspect-square items-center justify-center">
+              <Image src={ASEAN_LOGO_SRC} alt="ASEAN logo" width={260} height={260} className="size-[260px]" />
+            </div>
+          ) : (
+            <HeroGlobe />
+          )}
         </div>
       </section>
 
-      {/* Metrics Row - Live Pipeline Counts */}
-      <section className="metrics-grid">
-        <div className="metric-card">
-          <span className="metric-label">Total Saved Projects</span>
-          <div className="metric-value">{proposals.length}</div>
-          <div className="metric-sub">
-            <span>Active pilot proposals</span>
-          </div>
-        </div>
-
-        <div className="metric-card">
-          <span className="metric-label">Under Team Review</span>
-          <div className="metric-value" style={{ color: 'var(--accent-amber)' }}>
-            {underReviewCount}
-          </div>
-          <div className="metric-sub">
-            <span>Needs manager sign-off</span>
-          </div>
-        </div>
-
-        <div className="metric-card">
-          <span className="metric-label">Approved Pilots</span>
-          <div className="metric-value" style={{ color: 'var(--accent-emerald)' }}>
-            {approvedCount}
-          </div>
-          <div className="metric-sub">
-            <span>Ready to start project</span>
-          </div>
-        </div>
-
-        <div className="metric-card">
-          <span className="metric-label">Draft Proposals</span>
-          <div className="metric-value">
-            {draftsCount}
-          </div>
-          <div className="metric-sub">
-            <span>In-progress planning</span>
-          </div>
-        </div>
-
-        <div className="metric-card">
-          <span className="metric-label">Startups in Directory</span>
-          <div className="metric-value">{ALL_STARTUPS.length}</div>
-          <div className="metric-sub">
-            <span>SG • MY • ID • VN • TH • PH</span>
-          </div>
-        </div>
+      {/* Live pipeline counts */}
+      <section className="metrics-grid" aria-label="Pipeline summary">
+        {metricCards.map((m, i) => (
+          <Reveal key={m.label} delay={i * 0.04} className="metric-card">
+            <span className="metric-label">{m.label}</span>
+            <div className="metric-value" style={m.color ? { color: m.color } : undefined}>
+              <NumberTicker value={m.value} />
+            </div>
+            <div className="metric-sub">
+              <span>{m.sub}</span>
+            </div>
+          </Reveal>
+        ))}
       </section>
 
       {/* ASEAN flag slider: opens the directory filtered by country */}
       <FlagSlider counts={flagCounts} onSelectCountry={(code) => openDirectory(code)} />
 
       {/* Deal Pipeline Dashboard */}
-      <section style={{ marginTop: '2.5rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', flexWrap: 'wrap', gap: '0.75rem' }}>
+      <section className="mt-10">
+        <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
           <div>
-            <h2 style={{ fontSize: '1.35rem', fontWeight: 800 }}>
-              Pilot Projects & Proposals
-            </h2>
-            <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-              Track project progress, review stages, and next actions with your team.
-            </p>
+            <h2 className="text-2xl font-bold tracking-tight text-foreground">Pilot projects & proposals</h2>
+            <p className="mt-1 text-sm text-text-secondary">Track progress, review stages, and next actions with your team.</p>
           </div>
 
-          <button type="button" className="btn btn-primary btn-sm" onClick={onStartNewPoc}>
-            + Start New Project
-          </button>
+          <Button variant="outline" size="sm" className="rounded-full max-md:hidden" onClick={onStartNewPoc}>
+            <Plus aria-hidden /> New project
+          </Button>
         </div>
 
         {/* Status Filter Tabs (pill row; scrolls sideways on mobile) */}
@@ -172,13 +178,13 @@ export function DashboardView({
         </div>
 
         {filteredProposals.length === 0 ? (
-          <div className="card state-box" style={{ padding: '3rem 1.5rem', textAlign: 'center' }}>
-            <p style={{ color: 'var(--text-muted)', marginBottom: '1rem' }}>
-              No proposals found with status: <strong>{statusFilter}</strong>
+          <div className="card state-box">
+            <p className="text-text-muted">
+              No proposals with status <strong className="text-foreground">{statusFilter}</strong>.
             </p>
-            <button type="button" className="btn btn-outline btn-sm" onClick={() => setStatusFilter('All')}>
-              View All Pipeline Deals
-            </button>
+            <Button variant="outline" size="sm" className="rounded-full" onClick={() => setStatusFilter('All')}>
+              View all deals
+            </Button>
           </div>
         ) : (
           <>
@@ -216,8 +222,8 @@ export function DashboardView({
                           <CountryFlag code={p.startupCountry} />
                         </div>
                         {p.editedFields && p.editedFields.length > 0 && (
-                          <span style={{ fontSize: '0.7rem', color: 'var(--accent-amber)' }}>
-                            ✎ {p.editedFields.length} user edit{p.editedFields.length > 1 ? 's' : ''}
+                          <span className="inline-flex items-center gap-1 text-[0.7rem] text-accent-amber">
+                            <PencilLine className="size-3" aria-hidden /> {p.editedFields.length} user edit{p.editedFields.length > 1 ? 's' : ''}
                           </span>
                         )}
                       </td>
@@ -233,12 +239,12 @@ export function DashboardView({
                               : 'badge-draft'
                           }`}
                         >
-                          ● {p.status}
+                          <span className="size-1.5 rounded-full bg-current" aria-hidden /> {p.status}
                         </span>
                       </td>
                       <td>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.8rem', color: isApproved ? 'var(--accent-emerald)' : isUnderReview ? 'var(--accent-amber)' : 'var(--text-secondary)' }}>
-                          <span>▸</span>
+                          <ChevronRight className="size-3.5 shrink-0" aria-hidden />
                           <span>{p.nextAction || 'Review proposal'}</span>
                         </div>
                       </td>
@@ -255,7 +261,7 @@ export function DashboardView({
                               onClick={() => downloadProposalPdf(p)}
                               title="Download official PDF"
                             >
-                              PDF ↓
+                              <Download className="size-3.5" aria-hidden /> PDF
                             </button>
                           )}
                           <button
@@ -263,7 +269,7 @@ export function DashboardView({
                             className="btn btn-outline btn-sm"
                             onClick={() => onOpenProposal(p)}
                           >
-                            Open →
+                            Open <ArrowRight className="size-3.5" aria-hidden />
                           </button>
                         </div>
                       </td>
@@ -278,56 +284,25 @@ export function DashboardView({
         )}
       </section>
 
-      {/* Value Proposition Workflow Walkthrough */}
-      <section style={{ marginTop: '4rem' }}>
-        <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-          <h2 style={{ fontSize: '1.5rem', fontWeight: 800 }}>How It Works in 5 Simple Steps</h2>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
-            A clear, step-by-step path from finding a problem to launching a pilot project.
-          </p>
-        </div>
+      {/* How it works */}
+      <section className="mt-20" aria-labelledby="how-title">
+        <Reveal className="mb-8 text-center">
+          <h2 id="how-title" className="text-2xl font-bold tracking-tight text-foreground">How it works</h2>
+          <p className="mt-1 text-sm text-text-secondary">Five steps from a business problem to a signed-off pilot.</p>
+        </Reveal>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem' }}>
-          <div className="card" style={{ padding: '1.25rem' }}>
-            <span style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--accent-cyan)' }}>01</span>
-            <h3 style={{ fontSize: '1rem', fontWeight: 700, margin: '0.5rem 0' }}>Step 1: Describe Your Problem</h3>
-            <p style={{ fontSize: '0.825rem', color: 'var(--text-secondary)' }}>
-              Tell us what business challenge you want to solve, your country, and your timeline.
-            </p>
-          </div>
-
-          <div className="card" style={{ padding: '1.25rem' }}>
-            <span style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--accent-emerald)' }}>02</span>
-            <h3 style={{ fontSize: '1rem', fontWeight: 700, margin: '0.5rem 0' }}>Step 2: Smart Accuracy Matching</h3>
-            <p style={{ fontSize: '0.825rem', color: 'var(--text-secondary)' }}>
-              Our system scores real and sample startups based on skills, experience, and data safety.
-            </p>
-          </div>
-
-          <div className="card" style={{ padding: '1.25rem' }}>
-            <span style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--accent-amber)' }}>03</span>
-            <h3 style={{ fontSize: '1rem', fontWeight: 700, margin: '0.5rem 0' }}>Step 3: Clear Reasons Why</h3>
-            <p style={{ fontSize: '0.825rem', color: 'var(--text-secondary)' }}>
-              See honest match scores, what the startup can do, and what they can&apos;t do yet.
-            </p>
-          </div>
-
-          <div className="card" style={{ padding: '1.25rem' }}>
-            <span style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--accent-purple)' }}>04</span>
-            <h3 style={{ fontSize: '1rem', fontWeight: 700, margin: '0.5rem 0' }}>Step 4: Generate a Pilot Plan</h3>
-            <p style={{ fontSize: '0.825rem', color: 'var(--text-secondary)' }}>
-              Get a ready-to-use 60-day roadmap, team responsibilities, and success goals.
-            </p>
-          </div>
-
-          <div className="card" style={{ padding: '1.25rem' }}>
-            <span style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--accent-rose)' }}>05</span>
-            <h3 style={{ fontSize: '1rem', fontWeight: 700, margin: '0.5rem 0' }}>Step 5: Review, Edit & PDF</h3>
-            <p style={{ fontSize: '0.825rem', color: 'var(--text-secondary)' }}>
-              Easily customize the plan with your team and download a clean PDF report.
-            </p>
-          </div>
-        </div>
+        <ol className="grid gap-3 [grid-template-columns:repeat(auto-fit,minmax(200px,1fr))]">
+          {STEPS.map((s, i) => (
+            <RevealItem key={s.title} delay={i * 0.05} className="flex h-full flex-col gap-3 rounded-2xl border border-border bg-card p-5">
+                <span className={cn('flex size-9 items-center justify-center rounded-full', s.tone)}>
+                  <s.icon className="size-4" aria-hidden />
+                </span>
+                <span className="text-xs font-semibold tabular-nums text-text-muted">Step {i + 1}</span>
+                <h3 className="-mt-2 text-base font-semibold text-foreground">{s.title}</h3>
+                <p className="text-[0.85rem] leading-relaxed text-text-secondary">{s.body}</p>
+            </RevealItem>
+          ))}
+        </ol>
       </section>
     </div>
   );

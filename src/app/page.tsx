@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect } from 'react';
+import { AnimatePresence, motion } from 'motion/react';
 import { scrollToTop } from '@/lib/scroll';
 import { useGenerateProposal } from '@/hooks/useGenerateProposal';
 import { useAppStore, appStore, type AppView } from '@/stores/appStore';
@@ -45,6 +46,14 @@ export default function Home() {
       />
 
       <main className="app-container" style={{ marginTop: '1.5rem' }}>
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.div
+            key={view}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+          >
         {view === 'dashboard' && (
           <DashboardView
             metrics={metrics}
@@ -85,6 +94,8 @@ export default function Home() {
             onBack={() => navigate('dashboard')}
           />
         )}
+          </motion.div>
+        </AnimatePresence>
       </main>
 
       <Footer />
