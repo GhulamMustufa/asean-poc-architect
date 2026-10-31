@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { ModelSwitcher } from './ModelSwitcher';
+import { ALL_STARTUPS } from '@/data/startups';
 
 interface NavbarProps {
   currentView: 'dashboard' | 'new-challenge' | 'match-results' | 'proposal';
@@ -35,7 +36,7 @@ export function Navbar({ currentView, onNavigate, onOpenStartupsModal }: NavbarP
             className="nav-link"
             onClick={onOpenStartupsModal}
           >
-            Startup Directory (14)
+            Startup Directory ({ALL_STARTUPS.length})
           </button>
 
           <button
