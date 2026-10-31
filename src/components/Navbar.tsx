@@ -40,6 +40,19 @@ export function Navbar({ currentView, onNavigate, onOpenStartupsModal }: NavbarP
             <span className="mobile-only">Startups ({ALL_STARTUPS.length})</span>
           </button>
 
+          <a
+            href="/presentation.html"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="nav-link"
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', color: 'var(--accent-cyan)' }}
+            title="Open Interactive Pitch Deck"
+          >
+            <span>📊</span>
+            <span className="desktop-only">Pitch Deck</span>
+            <span className="mobile-only">Pitch</span>
+          </a>
+
           <button
             type="button"
             className="btn btn-primary btn-sm"
