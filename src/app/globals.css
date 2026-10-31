@@ -201,6 +201,9 @@
   --color-asean-white: var(--asean-white);
   --color-text-secondary: var(--text-secondary);
   --color-text-muted: var(--text-muted);
+  --color-accent-amber: var(--accent-amber);
+  --color-accent-blue: var(--accent-cyan);
+  --color-accent-red: var(--accent-rose);
   --color-surface: var(--bg-card);
   --color-glass: var(--glass-bg);
   --font-sans: var(--font-geist-sans), system-ui, sans-serif;
@@ -1076,6 +1079,37 @@ body {
 
 @keyframes spin {
   to { transform: rotate(360deg); }
+}
+
+/* Marquee (flag slider) */
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(calc(-100% - var(--gap))); }
+}
+
+.marquee-track {
+  animation: marquee var(--duration) linear infinite;
+}
+
+.marquee-reverse {
+  animation-direction: reverse;
+}
+
+.marquee-pausable:hover .marquee-track,
+.marquee-pausable:focus-within .marquee-track {
+  animation-play-state: paused;
+}
+
+.marquee-fade {
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 8%, #000 92%, transparent);
+  mask-image: linear-gradient(to right, transparent, #000 8%, #000 92%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marquee { overflow: visible; }
+  .marquee-track { animation: none; flex-wrap: wrap; justify-content: center; flex-shrink: 1; }
+  .marquee-copy { display: none; }
+  .marquee-fade { -webkit-mask-image: none; mask-image: none; }
 }
 
 /* Responsive Rules */

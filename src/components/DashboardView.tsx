@@ -1,6 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
+import { FlagSlider } from '@/components/FlagSlider';
+import { useAppStore } from '@/stores/appStore';
+import { countStartupsByCountry } from '@/data/aseanCountries';
+import { ALL_STARTUPS } from '@/data/startups';
 import { CountryFlag } from '@/components/CountryFlag';
 import { PilotProposal, PipelineMetrics, ProposalStatus } from '@/types';
 import { downloadProposalPdf } from '@/lib/pdfExport';
@@ -21,6 +25,8 @@ export function DashboardView({
   onOpenStartupsModal
 }: DashboardViewProps) {
   const [statusFilter, setStatusFilter] = useState<'All' | ProposalStatus>('All');
+  const openDirectory = useAppStore((s) => s.openDirectory);
+  const flagCounts = useMemo(() => countStartupsByCountry(ALL_STARTUPS), []);
 
   // Filter proposals by selected status tab
   const filteredProposals = proposals.filter((p) => {
@@ -55,7 +61,7 @@ export function DashboardView({
           </button>
 
           <button type="button" className="btn btn-secondary btn-lg" onClick={onOpenStartupsModal}>
-            Browse Startup Directory ({metrics.matchedStartups})
+            Browse Startup Directory ({ALL_STARTUPS.length})
           </button>
         </div>
       </section>
@@ -102,12 +108,15 @@ export function DashboardView({
 
         <div className="metric-card">
           <span className="metric-label">Startups in Directory</span>
-          <div className="metric-value">{metrics.matchedStartups}</div>
+          <div className="metric-value">{ALL_STARTUPS.length}</div>
           <div className="metric-sub">
             <span>SG • MY • ID • VN • TH • PH</span>
           </div>
         </div>
       </section>
+
+      {/* ASEAN flag slider: opens the directory filtered by country */}
+      <FlagSlider counts={flagCounts} onSelectCountry={(code) => openDirectory(code)} />
 
       {/* Deal Pipeline Dashboard */}
       <section style={{ marginTop: '2.5rem' }}>

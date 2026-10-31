@@ -1,202 +1,205 @@
 'use client';
 
-import React, { useState } from 'react';
-import { CountryFlag } from '@/components/CountryFlag';
+import React, { useMemo, useState } from 'react';
+import { ArrowUpRight, BadgeCheck, FlaskConical, Search } from 'lucide-react';
 import { ALL_STARTUPS } from '@/data/startups';
-import { ASEANCountry, CuratedStartup } from '@/types';
+import { ASEAN_MEMBERS, countStartupsByCountry, getMember } from '@/data/aseanCountries';
+import { filterStartups, type StartupTier } from '@/lib/filterStartups';
+import { useAppStore } from '@/stores/appStore';
+import { CountryFlag } from '@/components/CountryFlag';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { cn } from '@/lib/utils';
+import type { CuratedStartup } from '@/types';
 
 interface StartupsModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSelectStartup?: (startup: CuratedStartup) => void;
 }
 
-export function StartupsModal({ isOpen, onClose, onSelectStartup }: StartupsModalProps) {
-  const [selectedCountry, setSelectedCountry] = useState<string>('ALL');
-  const [verificationFilter, setVerificationFilter] = useState<'ALL' | 'VERIFIED' | 'SYNTHETIC'>('ALL');
-  const [searchQuery, setSearchQuery] = useState<string>('');
+const COUNTRY_COUNTS = countStartupsByCountry(ALL_STARTUPS);
+const VERIFIED_COUNT = ALL_STARTUPS.filter((s) => !s.isSyntheticDemo).length;
+const SAMPLE_COUNT = ALL_STARTUPS.length - VERIFIED_COUNT;
 
-  if (!isOpen) return null;
-
-  const countries: { code: string; label: string }[] = [
-    { code: 'ALL', label: 'All ASEAN' },
-    { code: 'SG', label: '🇸🇬 Singapore' },
-    { code: 'ID', label: '🇮🇩 Indonesia' },
-    { code: 'MY', label: '🇲🇾 Malaysia' },
-    { code: 'VN', label: '🇻🇳 Vietnam' },
-    { code: 'TH', label: '🇹🇭 Thailand' },
-    { code: 'PH', label: '🇵🇭 Philippines' }
-  ];
-
-  const filteredStartups = ALL_STARTUPS.filter((s) => {
-    const matchCountry = selectedCountry === 'ALL' || s.country === selectedCountry;
-    const matchTier =
-      verificationFilter === 'ALL' ||
-      (verificationFilter === 'VERIFIED' && !s.isSyntheticDemo) ||
-      (verificationFilter === 'SYNTHETIC' && s.isSyntheticDemo);
-    const matchSearch =
-      s.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      s.tagline.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      s.primaryIndustry.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      s.capabilities.some((c) => c.toLowerCase().includes(searchQuery.toLowerCase()));
-    return matchCountry && matchTier && matchSearch;
-  });
+export function StartupsModal({ isOpen, onClose }: StartupsModalProps) {
+  const initialCountry = useAppStore((s) => s.directory.country);
 
   return (
-    <div className="modal-overlay" onClick={onClose} role="dialog" aria-modal="true" aria-labelledby="modal-title">
-      <div className="modal-content" style={{ maxWidth: '880px' }} onClick={(e) => e.stopPropagation()}>
-        <div className="modal-header">
-          <div>
-            <h2 id="modal-title" style={{ fontSize: '1.35rem', fontWeight: 800 }}>
-              Browse ASEAN Tech Startups
-            </h2>
-            <p style={{ fontSize: '0.825rem', color: 'var(--text-secondary)', marginTop: '0.2rem' }}>
-              A trusted directory of real and sample technology companies across Southeast Asia.
-            </p>
-          </div>
-          <button type="button" className="btn btn-outline btn-sm" onClick={onClose} aria-label="Close modal">
-            ✕
-          </button>
-        </div>
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="flex max-w-[880px] flex-col gap-0 p-0">
+        <DialogHeader className="border-b border-border px-6 pb-4 pt-6">
+          <DialogTitle>Browse ASEAN tech startups</DialogTitle>
+          <DialogDescription>Real and sample technology companies across Southeast Asia.</DialogDescription>
+        </DialogHeader>
+        {/* Keyed so filters reset to the requested country each time it opens */}
+        {isOpen && <DirectoryBody key={initialCountry} initialCountry={initialCountry} />}
+      </DialogContent>
+    </Dialog>
+  );
+}
 
-        {/* Filter bar */}
-        <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
-          <input
-            type="search"
-            placeholder="Search by name, technology, or feature..."
-            className="form-input"
-            style={{ flex: 1, minWidth: '240px' }}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
+export function DirectoryBody({ initialCountry }: { initialCountry: string }) {
+  const [country, setCountry] = useState(initialCountry || 'ALL');
+  const [tier, setTier] = useState<StartupTier>('ALL');
+  const [query, setQuery] = useState('');
 
-          <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap' }}>
-            <button
-              type="button"
-              className={`btn btn-sm ${verificationFilter === 'ALL' ? 'btn-primary' : 'btn-outline'}`}
-              onClick={() => setVerificationFilter('ALL')}
-            >
-              All (32)
-            </button>
-            <button
-              type="button"
-              className={`btn btn-sm ${verificationFilter === 'VERIFIED' ? 'btn-primary' : 'btn-outline'}`}
-              style={{ borderColor: 'rgba(var(--rgb-blue), 0.5)', color: verificationFilter === 'VERIFIED' ? '#fff' : 'var(--accent-emerald)' }}
-              onClick={() => setVerificationFilter('VERIFIED')}
-            >
-              🟢 Real Startups (18)
-            </button>
-            <button
-              type="button"
-              className={`btn btn-sm ${verificationFilter === 'SYNTHETIC' ? 'btn-primary' : 'btn-outline'}`}
-              style={{ borderColor: 'rgba(var(--rgb-fg), 0.5)', color: verificationFilter === 'SYNTHETIC' ? '#fff' : 'var(--text-secondary)' }}
-              onClick={() => setVerificationFilter('SYNTHETIC')}
-            >
-              🟣 Sample Startups (14)
-            </button>
+  const results = useMemo(() => filterStartups(ALL_STARTUPS, { country, tier, query }), [country, tier, query]);
+  const member = country === 'ALL' ? undefined : getMember(country);
+  const countryIsEmpty = member !== undefined && COUNTRY_COUNTS[member.code] === 0;
+
+  return (
+    <div className="flex min-h-0 flex-1 flex-col">
+      <div className="flex flex-col gap-3 border-b border-border px-6 py-4">
+        <div className="flex flex-wrap gap-2">
+          <label className="relative min-w-[220px] flex-1">
+            <span className="sr-only">Search startups</span>
+            <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-text-muted" aria-hidden />
+            <input
+              type="search"
+              placeholder="Search by name, technology or feature"
+              className="h-10 w-full rounded-full border border-input bg-background pl-9 pr-4 text-sm text-foreground outline-none transition-colors placeholder:text-text-muted focus:border-ring"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+            />
+          </label>
+          <div className="flex gap-1.5" role="group" aria-label="Verification">
+            <Chip active={tier === 'ALL'} onClick={() => setTier('ALL')}>All {ALL_STARTUPS.length}</Chip>
+            <Chip active={tier === 'VERIFIED'} onClick={() => setTier('VERIFIED')}>
+              <BadgeCheck className="size-3.5" aria-hidden /> Real {VERIFIED_COUNT}
+            </Chip>
+            <Chip active={tier === 'SYNTHETIC'} onClick={() => setTier('SYNTHETIC')}>
+              <FlaskConical className="size-3.5" aria-hidden /> Sample {SAMPLE_COUNT}
+            </Chip>
           </div>
         </div>
 
-        {/* Country filters */}
-        <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap', marginBottom: '1.25rem' }}>
-          {countries.map((c) => (
-            <button
-              key={c.code}
-              type="button"
-              className={`btn btn-sm ${selectedCountry === c.code ? 'btn-primary' : 'btn-outline'}`}
-              onClick={() => setSelectedCountry(c.code)}
-            >
-              {c.label}
-            </button>
+        <div className="chip-row -mx-6 flex gap-1.5 overflow-x-auto px-6 pb-1" role="group" aria-label="Country">
+          <Chip active={country === 'ALL'} onClick={() => setCountry('ALL')}>All ASEAN</Chip>
+          {ASEAN_MEMBERS.map((m) => (
+            <Chip key={m.code} active={country === m.code} onClick={() => setCountry(m.code)}>
+              <CountryFlag code={m.code} showLabel={false} />
+              {m.name}
+              <span className="tabular-nums opacity-70">{COUNTRY_COUNTS[m.code]}</span>
+            </Chip>
           ))}
         </div>
+      </div>
 
-        {/* Startup Cards List */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', maxHeight: '55vh', overflowY: 'auto' }}>
-          {filteredStartups.length === 0 ? (
-            <div className="state-box">
-              <p style={{ color: 'var(--text-muted)' }}>No startups match your search filter.</p>
-            </div>
-          ) : (
-            filteredStartups.map((s) => (
-              <div
-                key={s.id}
-                style={{
-                  background: 'rgba(var(--rgb-fg), 0.03)',
-                  border: '1px solid var(--border-subtle)',
-                  borderRadius: 'var(--radius-md)',
-                  padding: '1.25rem'
-                }}
-              >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '1rem', flexWrap: 'wrap' }}>
-                  <div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem', flexWrap: 'wrap' }}>
-                      <CountryFlag code={s.country} />
-                      <h3 style={{ fontSize: '1.1rem', fontWeight: 700 }}>{s.name}</h3>
-                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>• {s.stage} (Est. {s.foundedYear})</span>
-                      {!s.isSyntheticDemo ? (
-                        <span className="badge" style={{ background: 'rgba(var(--rgb-blue), 0.15)', color: 'var(--accent-emerald)', border: '1px solid rgba(var(--rgb-blue), 0.4)', fontSize: '0.7rem', fontWeight: 700 }}>
-                          ✓ VERIFIED REAL: {s.sourceOrganisation || 'Enterprise SG / Cradle / HUB.ID'}
-                        </span>
-                      ) : (
-                        <span className="badge" style={{ background: 'rgba(var(--rgb-fg), 0.12)', color: 'var(--text-secondary)', border: '1px solid rgba(var(--rgb-fg), 0.35)', fontSize: '0.7rem' }}>
-                          🟣 Sample Demo Company
-                        </span>
-                      )}
-                    </div>
-                    <p style={{ fontSize: '0.85rem', color: 'var(--accent-cyan)', fontWeight: 500 }}>
-                      {s.tagline}
-                    </p>
-                  </div>
-
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.35rem' }}>
-                    <span className={`badge ${s.evidenceQuality === 'Audited Tier-1' ? 'badge-verified' : 'badge-supplied'}`}>
-                      {s.evidenceQuality}
-                    </span>
-                    {s.website && (
-                      <a
-                        href={s.website}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        style={{ fontSize: '0.75rem', color: 'var(--accent-cyan)', textDecoration: 'none' }}
-                      >
-                        Official Website ↗
-                      </a>
-                    )}
-                  </div>
-                </div>
-
-                <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: '0.75rem 0' }}>
-                  {s.summary}
-                </p>
-
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35rem', marginBottom: '0.75rem' }}>
-                  {s.capabilities.map((cap) => (
-                    <span key={cap} className="capability-tag">
-                      {cap}
-                    </span>
-                  ))}
-                </div>
-
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid var(--border-subtle)', paddingTop: '0.75rem', fontSize: '0.775rem', color: 'var(--text-muted)' }}>
-                  <div>
-                    <span><strong>Past Work:</strong> {s.notableDeployments.join(', ')}</span>
-                  </div>
-                  <div>
-                    <span><strong>Security Standards:</strong> {s.verifiedCertifications.join(', ')}</span>
-                  </div>
-                </div>
-              </div>
-            ))
-          )}
-        </div>
-
-        <div style={{ marginTop: '1.5rem', display: 'flex', justifyContent: 'flex-end' }}>
-          <button type="button" className="btn btn-secondary" onClick={onClose}>
-            Close
-          </button>
-        </div>
+      <div className="min-h-0 flex-1 overflow-y-auto px-6 py-4" data-lenis-prevent>
+        {results.length === 0 ? (
+          <div className="flex flex-col items-center gap-3 px-4 py-12 text-center">
+            {member && <CountryFlag code={member.code} size="lg" showLabel={false} />}
+            <p className="font-semibold text-foreground">
+              {countryIsEmpty ? `No startups listed in ${member!.name} yet` : 'No startups match these filters'}
+            </p>
+            <p className="max-w-sm text-sm text-text-secondary">
+              {countryIsEmpty
+                ? 'We are still onboarding companies from this member state. Browse the rest of the region in the meantime.'
+                : 'Try a different search or clear the filters.'}
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                setCountry('ALL');
+                setTier('ALL');
+                setQuery('');
+              }}
+              className="mt-1 inline-flex h-9 items-center rounded-full bg-primary px-4 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+            >
+              View all ASEAN startups
+            </button>
+          </div>
+        ) : (
+          <ul className="flex flex-col gap-3">
+            {results.map((s) => (
+              <li key={s.id}>
+                <StartupCard s={s} />
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
     </div>
+  );
+}
+
+function Chip({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
+  return (
+    <button
+      type="button"
+      aria-pressed={active}
+      onClick={onClick}
+      className={cn(
+        'inline-flex h-9 shrink-0 snap-start items-center gap-1.5 whitespace-nowrap rounded-full border px-3.5 text-[0.8rem] font-medium transition-colors duration-200 ease-out',
+        active
+          ? 'border-primary bg-primary text-primary-foreground'
+          : 'border-border bg-transparent text-text-secondary hover:border-input hover:text-foreground'
+      )}
+    >
+      {children}
+    </button>
+  );
+}
+
+function StartupCard({ s }: { s: CuratedStartup }) {
+  return (
+    <article className="rounded-xl border border-border bg-card p-5">
+      <div className="flex flex-wrap items-start gap-3">
+        <div className="min-w-0 basis-full">
+          <div className="mb-1 flex flex-wrap items-center gap-2">
+            <CountryFlag code={s.country} />
+            <h3 className="text-base font-bold text-foreground">{s.name}</h3>
+            <span className="text-xs text-text-muted">
+              {s.stage} · Est. {s.foundedYear}
+            </span>
+          </div>
+          <p className="text-sm font-medium text-accent-blue">{s.tagline}</p>
+        </div>
+
+        <div className="flex basis-full flex-wrap items-center gap-1.5">
+          {!s.isSyntheticDemo ? (
+            <span className="badge badge-verified">
+              <BadgeCheck className="size-3.5" aria-hidden /> Verified · {s.sourceOrganisation || 'Enterprise SG / Cradle / HUB.ID'}
+            </span>
+          ) : (
+            <span className="badge badge-draft">
+              <FlaskConical className="size-3.5" aria-hidden /> Sample demo company
+            </span>
+          )}
+          <span className={cn('badge', s.evidenceQuality === 'Audited Tier-1' ? 'badge-verified' : 'badge-supplied')}>
+            {s.evidenceQuality}
+          </span>
+          {s.website && (
+            <a
+              href={s.website}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="ml-auto inline-flex items-center gap-0.5 text-xs text-accent-blue hover:underline"
+            >
+              Official website <ArrowUpRight className="size-3" aria-hidden />
+              <span className="sr-only">(opens in a new tab)</span>
+            </a>
+          )}
+        </div>
+      </div>
+
+      <p className="my-3 text-sm text-text-secondary">{s.summary}</p>
+
+      <div className="mb-3 flex flex-wrap gap-1.5">
+        {s.capabilities.map((cap) => (
+          <span key={cap} className="capability-tag">
+            {cap}
+          </span>
+        ))}
+      </div>
+
+      <div className="flex flex-wrap justify-between gap-2 border-t border-border pt-3 text-xs text-text-muted">
+        <span>
+          <strong className="font-semibold text-text-secondary">Past work:</strong> {s.notableDeployments.join(', ')}
+        </span>
+        <span>
+          <strong className="font-semibold text-text-secondary">Security:</strong> {s.verifiedCertifications.join(', ') || '—'}
+        </span>
+      </div>
+    </article>
   );
 }
