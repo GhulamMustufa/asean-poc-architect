@@ -286,7 +286,7 @@ export function ChallengeForm({ onSubmit, onCancel }: ChallengeFormProps) {
 
       {/* Duplicate Submission Warning */}
       {duplicateWarning && (
-        <div style={{ background: 'rgba(245, 158, 11, 0.1)', border: '1px solid rgba(245, 158, 11, 0.35)', borderRadius: 'var(--radius-md)', padding: '1rem', margin: '1rem 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' }}>
+        <div style={{ background: 'rgba(var(--rgb-yellow), 0.1)', border: '1px solid rgba(var(--rgb-yellow), 0.35)', borderRadius: 'var(--radius-md)', padding: '1rem', margin: '1rem 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
               <span style={{ color: 'var(--accent-amber)', fontWeight: 800 }}>⚠ A PROJECT WITH THIS NAME ALREADY EXISTS</span>

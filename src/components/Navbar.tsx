@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { ThemeToggle } from '@/components/ThemeToggle';
 
 interface NavbarProps {
   currentView: 'dashboard' | 'new-challenge' | 'match-results' | 'proposal';
@@ -42,6 +43,8 @@ export function Navbar({ currentView, onNavigate, onOpenStartupsModal }: NavbarP
           >
             <span>+</span> Start New Project
           </button>
+
+          <ThemeToggle />
         </div>
       </div>
     </nav>

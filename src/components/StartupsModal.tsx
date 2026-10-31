@@ -80,7 +80,7 @@ export function StartupsModal({ isOpen, onClose, onSelectStartup }: StartupsModa
             <button
               type="button"
               className={`btn btn-sm ${verificationFilter === 'VERIFIED' ? 'btn-primary' : 'btn-outline'}`}
-              style={{ borderColor: 'rgba(16, 185, 129, 0.5)', color: verificationFilter === 'VERIFIED' ? '#fff' : '#34d399' }}
+              style={{ borderColor: 'rgba(var(--rgb-blue), 0.5)', color: verificationFilter === 'VERIFIED' ? '#fff' : 'var(--accent-emerald)' }}
               onClick={() => setVerificationFilter('VERIFIED')}
             >
               🟢 Real Startups (18)
@@ -88,7 +88,7 @@ export function StartupsModal({ isOpen, onClose, onSelectStartup }: StartupsModa
             <button
               type="button"
               className={`btn btn-sm ${verificationFilter === 'SYNTHETIC' ? 'btn-primary' : 'btn-outline'}`}
-              style={{ borderColor: 'rgba(168, 85, 247, 0.5)', color: verificationFilter === 'SYNTHETIC' ? '#fff' : '#c084fc' }}
+              style={{ borderColor: 'rgba(var(--rgb-fg), 0.5)', color: verificationFilter === 'SYNTHETIC' ? '#fff' : 'var(--text-secondary)' }}
               onClick={() => setVerificationFilter('SYNTHETIC')}
             >
               🟣 Sample Startups (14)
@@ -121,7 +121,7 @@ export function StartupsModal({ isOpen, onClose, onSelectStartup }: StartupsModa
               <div
                 key={s.id}
                 style={{
-                  background: 'rgba(255, 255, 255, 0.03)',
+                  background: 'rgba(var(--rgb-fg), 0.03)',
                   border: '1px solid var(--border-subtle)',
                   borderRadius: 'var(--radius-md)',
                   padding: '1.25rem'
@@ -134,11 +134,11 @@ export function StartupsModal({ isOpen, onClose, onSelectStartup }: StartupsModa
                       <h3 style={{ fontSize: '1.1rem', fontWeight: 700 }}>{s.name}</h3>
                       <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>• {s.stage} (Est. {s.foundedYear})</span>
                       {!s.isSyntheticDemo ? (
-                        <span className="badge" style={{ background: 'rgba(16, 185, 129, 0.15)', color: '#34d399', border: '1px solid rgba(16, 185, 129, 0.4)', fontSize: '0.7rem', fontWeight: 700 }}>
+                        <span className="badge" style={{ background: 'rgba(var(--rgb-blue), 0.15)', color: 'var(--accent-emerald)', border: '1px solid rgba(var(--rgb-blue), 0.4)', fontSize: '0.7rem', fontWeight: 700 }}>
                           ✓ VERIFIED REAL: {s.sourceOrganisation || 'Enterprise SG / Cradle / HUB.ID'}
                         </span>
                       ) : (
-                        <span className="badge" style={{ background: 'rgba(168, 85, 247, 0.12)', color: '#c084fc', border: '1px solid rgba(168, 85, 247, 0.35)', fontSize: '0.7rem' }}>
+                        <span className="badge" style={{ background: 'rgba(var(--rgb-fg), 0.12)', color: 'var(--text-secondary)', border: '1px solid rgba(var(--rgb-fg), 0.35)', fontSize: '0.7rem' }}>
                           🟣 Sample Demo Company
                         </span>
                       )}

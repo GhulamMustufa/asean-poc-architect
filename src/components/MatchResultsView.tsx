@@ -60,7 +60,7 @@ export function MatchResultsView({
   return (
     <div>
       {/* Header with Challenge Context */}
-      <div className="card" style={{ marginBottom: '2rem', background: 'linear-gradient(135deg, rgba(14, 165, 233, 0.08) 0%, rgba(17, 24, 39, 0.8) 100%)' }}>
+      <div className="card" style={{ marginBottom: '2rem', background: 'linear-gradient(135deg, rgba(var(--rgb-blue), 0.08) 0%, var(--bg-card) 100%)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.5rem' }}>
@@ -110,7 +110,7 @@ export function MatchResultsView({
           <button
             type="button"
             className={`btn btn-sm ${filterMode === 'verified-only' ? 'btn-primary' : 'btn-outline'}`}
-            style={{ borderColor: 'rgba(16, 185, 129, 0.5)', color: filterMode === 'verified-only' ? '#fff' : '#34d399' }}
+            style={{ borderColor: 'rgba(var(--rgb-blue), 0.5)', color: filterMode === 'verified-only' ? '#fff' : 'var(--accent-emerald)' }}
             onClick={() => setFilterMode('verified-only')}
           >
             🟢 Real ASEAN Companies ({verifiedCount})
@@ -118,7 +118,7 @@ export function MatchResultsView({
           <button
             type="button"
             className={`btn btn-sm ${filterMode === 'synthetic-only' ? 'btn-primary' : 'btn-outline'}`}
-            style={{ borderColor: 'rgba(168, 85, 247, 0.5)', color: filterMode === 'synthetic-only' ? '#fff' : '#c084fc' }}
+            style={{ borderColor: 'rgba(var(--rgb-fg), 0.5)', color: filterMode === 'synthetic-only' ? '#fff' : 'var(--text-secondary)' }}
             onClick={() => setFilterMode('synthetic-only')}
           >
             🟣 Sample Practice Startups ({syntheticCount})
@@ -170,11 +170,11 @@ export function MatchResultsView({
                   {/* Provenance Tier Badge */}
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '0.5rem' }}>
                     {!m.startup.isSyntheticDemo ? (
-                      <span className="badge" style={{ background: 'rgba(16, 185, 129, 0.15)', color: '#34d399', border: '1px solid rgba(16, 185, 129, 0.4)', fontWeight: 700, fontSize: '0.72rem' }}>
+                      <span className="badge" style={{ background: 'rgba(var(--rgb-blue), 0.15)', color: 'var(--accent-emerald)', border: '1px solid rgba(var(--rgb-blue), 0.4)', fontWeight: 700, fontSize: '0.72rem' }}>
                         ✓ VERIFIED REAL COMPANY: {m.startup.sourceOrganisation || 'Enterprise Singapore / Cradle'}
                       </span>
                     ) : (
-                      <span className="badge" style={{ background: 'rgba(168, 85, 247, 0.12)', color: '#c084fc', border: '1px solid rgba(168, 85, 247, 0.35)', fontWeight: 600, fontSize: '0.72rem' }}>
+                      <span className="badge" style={{ background: 'rgba(var(--rgb-fg), 0.12)', color: 'var(--text-secondary)', border: '1px solid rgba(var(--rgb-fg), 0.35)', fontWeight: 600, fontSize: '0.72rem' }}>
                         🟣 SAMPLE DEMO COMPANY
                       </span>
                     )}
@@ -220,8 +220,8 @@ export function MatchResultsView({
                   {m.startup.country === 'SG' && (
                     <div style={{ margin: '0.5rem 0' }}>
                       {govCheck ? (
-                        <div style={{ background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.35)', borderRadius: 'var(--radius-sm)', padding: '0.5rem 0.75rem', fontSize: '0.75rem' }}>
-                          <div style={{ color: '#34d399', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                        <div style={{ background: 'rgba(var(--rgb-blue), 0.1)', border: '1px solid rgba(var(--rgb-blue), 0.35)', borderRadius: 'var(--radius-sm)', padding: '0.5rem 0.75rem', fontSize: '0.75rem' }}>
+                          <div style={{ color: 'var(--accent-emerald)', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
                             <span>🏛️</span>
                             <span>{govCheck.source}</span>
                           </div>
@@ -229,14 +229,14 @@ export function MatchResultsView({
                             {govCheck.legalName} (UEN: {govCheck.uen})
                           </div>
                           <div style={{ color: 'var(--text-secondary)', marginTop: '0.1rem', fontSize: '0.72rem' }}>
-                            Status: <strong style={{ color: '#34d399' }}>{govCheck.status}</strong> • {govCheck.ssic} ({govCheck.responseTimeMs}ms)
+                            Status: <strong style={{ color: 'var(--accent-emerald)' }}>{govCheck.status}</strong> • {govCheck.ssic} ({govCheck.responseTimeMs}ms)
                           </div>
                         </div>
                       ) : (
                         <button
                           type="button"
                           className="btn btn-outline btn-sm"
-                          style={{ fontSize: '0.72rem', padding: '0.25rem 0.6rem', borderColor: 'rgba(56, 189, 248, 0.35)', color: 'var(--accent-cyan)', width: '100%', justifyContent: 'center' }}
+                          style={{ fontSize: '0.72rem', padding: '0.25rem 0.6rem', borderColor: 'rgba(var(--rgb-blue), 0.35)', color: 'var(--accent-cyan)', width: '100%', justifyContent: 'center' }}
                           disabled={verifyingStartupId === m.startup.id}
                           onClick={(e) => handleLiveGovCheck(e, m.startup)}
                         >
@@ -254,7 +254,7 @@ export function MatchResultsView({
                   )}
 
                   {/* 5-Dimension Deterministic Breakdown */}
-                  <div style={{ background: 'rgba(0, 0, 0, 0.35)', borderRadius: 'var(--radius-sm)', padding: '0.65rem 0.85rem', margin: '0.75rem 0', border: '1px solid var(--border-subtle)' }}>
+                  <div style={{ background: 'var(--bg-sunken)', borderRadius: 'var(--radius-sm)', padding: '0.65rem 0.85rem', margin: '0.75rem 0', border: '1px solid var(--border-subtle)' }}>
                     <div style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--accent-cyan)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.4rem' }}>
                       Detailed Match Score Breakdown
                     </div>
@@ -320,13 +320,13 @@ export function MatchResultsView({
 
                   {/* Missing Information in Challenge vs Genuine Mismatch */}
                   {m.missingInformation && m.missingInformation.length > 0 && (
-                    <div style={{ margin: '0.5rem 0', padding: '0.45rem 0.65rem', background: 'rgba(56, 189, 248, 0.08)', borderRadius: 'var(--radius-sm)', border: '1px solid rgba(56, 189, 248, 0.2)', fontSize: '0.775rem', color: 'var(--accent-cyan)' }}>
+                    <div style={{ margin: '0.5rem 0', padding: '0.45rem 0.65rem', background: 'rgba(var(--rgb-blue), 0.08)', borderRadius: 'var(--radius-sm)', border: '1px solid rgba(var(--rgb-blue), 0.2)', fontSize: '0.775rem', color: 'var(--accent-cyan)' }}>
                       ℹ {m.missingInformation[0]}
                     </div>
                   )}
 
                   {/* Risks & Known Limitations */}
-                  <div style={{ background: 'rgba(0, 0, 0, 0.25)', borderRadius: 'var(--radius-sm)', padding: '0.75rem', margin: '0.75rem 0', fontSize: '0.8rem' }}>
+                  <div style={{ background: 'var(--bg-sunken)', borderRadius: 'var(--radius-sm)', padding: '0.75rem', margin: '0.75rem 0', fontSize: '0.8rem' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem' }}>
                       <span style={{ color: 'var(--text-muted)', fontWeight: 600 }}>Profile Verification:</span>
                       <span className={`badge ${m.evidenceQuality === 'Audited Tier-1' ? 'badge-verified' : 'badge-supplied'}`}>
