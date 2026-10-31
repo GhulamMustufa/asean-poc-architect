@@ -71,7 +71,16 @@ export function Navbar({ currentView, onNavigate, onOpenStartupsModal }: NavbarP
             New Project
           </button>
 
-          <ThemeToggle className="ml-1" />
+          <ThemeToggle className="ml-1 max-md:glass max-md:size-10" />
+
+          <button
+            type="button"
+            onClick={() => onNavigate('new-challenge')}
+            aria-label="Start new project"
+            className="glass inline-flex size-10 items-center justify-center rounded-full text-foreground md:hidden"
+          >
+            <Plus className="size-5" aria-hidden />
+          </button>
         </nav>
       </div>
     </header>

@@ -1112,6 +1112,92 @@ body {
   .marquee-fade { -webkit-mask-image: none; mask-image: none; }
 }
 
+/* Glass surfaces (used on mobile only) */
+@utility glass {
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+}
+
+@utility glass-strong {
+  background: var(--glass-bg-strong);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  border-color: var(--glass-border);
+  box-shadow: var(--glass-shadow);
+}
+
+@utility glass-pill {
+  border-radius: 999px;
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .glass, .glass-strong, .navbar { background: var(--glass-solid) !important; }
+}
+
+.mobile-tabbar {
+  position: fixed;
+  left: 50%;
+  bottom: calc(0.75rem + env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  z-index: 60;
+  width: min(360px, calc(100% - 2rem));
+}
+
+.chip-row {
+  scroll-snap-type: x proximity;
+  scrollbar-width: none;
+}
+
+.chip-row::-webkit-scrollbar {
+  display: none;
+}
+
+@media (max-width: 767.98px) {
+  .navbar {
+    padding: calc(0.6rem + env(safe-area-inset-top)) 1rem 0.6rem;
+    background: var(--glass-bg);
+    -webkit-backdrop-filter: var(--glass-blur);
+    backdrop-filter: var(--glass-blur);
+    border-bottom: 1px solid var(--glass-border);
+  }
+
+  /* Room for the floating tab bar */
+  main.app-container {
+    padding-bottom: calc(6.5rem + env(safe-area-inset-bottom));
+  }
+
+  .site-footer {
+    margin-bottom: calc(5.5rem + env(safe-area-inset-bottom));
+  }
+
+  /* Flag slider: round glass avatars */
+  .flag-card {
+    width: auto;
+    flex-direction: column;
+    gap: 0.4rem;
+    padding: 0.25rem;
+    border: none;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .flag-card:hover { transform: none; box-shadow: none; }
+
+  .flag-card-img {
+    width: 3.5rem;
+    height: 3.5rem;
+    border-radius: 999px;
+    padding: 3px;
+    background: var(--glass-bg);
+    box-shadow: var(--glass-shadow);
+  }
+
+  .flag-card > span { align-items: center; text-align: center; }
+}
+
 /* Responsive Rules */
 @media (max-width: 768px) {
   .hero-title { font-size: 2rem; }

@@ -12,6 +12,7 @@ import { MatchResultsView } from '@/components/MatchResultsView';
 import { ProposalWorkspace } from '@/components/ProposalWorkspace';
 import { StartupsModal } from '@/components/StartupsModal';
 import { Footer } from '@/components/Footer';
+import { MobileTabBar } from '@/components/MobileTabBar';
 
 export default function Home() {
   const view = useAppStore((s) => s.view);
@@ -137,6 +138,13 @@ export default function Home() {
       </main>
 
       <Footer />
+
+      <MobileTabBar
+        currentView={view}
+        directoryOpen={directoryOpen}
+        onNavigate={goTo}
+        onOpenStartupsModal={() => openDirectory()}
+      />
 
       <StartupsModal isOpen={directoryOpen} onClose={closeDirectory} />
     </>

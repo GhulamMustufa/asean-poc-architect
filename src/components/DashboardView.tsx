@@ -2,6 +2,8 @@
 
 import React, { useMemo, useState } from 'react';
 import { FlagSlider } from '@/components/FlagSlider';
+import { ProposalList } from '@/components/ProposalList';
+import { cn } from '@/lib/utils';
 import { useAppStore } from '@/stores/appStore';
 import { countStartupsByCountry } from '@/data/aseanCountries';
 import { ALL_STARTUPS } from '@/data/startups';
@@ -38,6 +40,14 @@ export function DashboardView({
   const underReviewCount = proposals.filter((p) => p.status === 'Under Review' || (p.status as any) === 'In Review').length;
   const approvedCount = proposals.filter((p) => p.status === 'Approved').length;
   const rejectedCount = proposals.filter((p) => p.status === 'Rejected').length;
+
+  const statusTabs: { value: 'All' | ProposalStatus; label: string; count: number }[] = [
+    { value: 'All', label: 'All deals', count: proposals.length },
+    { value: 'Draft', label: 'Drafts', count: draftsCount },
+    { value: 'Under Review', label: 'Under review', count: underReviewCount },
+    { value: 'Approved', label: 'Approved', count: approvedCount },
+    { value: 'Rejected', label: 'Rejected', count: rejectedCount },
+  ];
 
   return (
     <div>
@@ -135,45 +145,30 @@ export function DashboardView({
           </button>
         </div>
 
-        {/* Status Filter Tabs */}
-        <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', flexWrap: 'wrap', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '0.75rem' }}>
-          <button
-            type="button"
-            className={`btn btn-sm ${statusFilter === 'All' ? 'btn-primary' : 'btn-outline'}`}
-            onClick={() => setStatusFilter('All')}
-          >
-            All Deals ({proposals.length})
-          </button>
-          <button
-            type="button"
-            className={`btn btn-sm ${statusFilter === 'Draft' ? 'btn-primary' : 'btn-outline'}`}
-            onClick={() => setStatusFilter('Draft')}
-          >
-            Drafts ({draftsCount})
-          </button>
-          <button
-            type="button"
-            className={`btn btn-sm ${statusFilter === 'Under Review' ? 'btn-primary' : 'btn-outline'}`}
-            onClick={() => setStatusFilter('Under Review')}
-          >
-            Under Review ({underReviewCount})
-          </button>
-          <button
-            type="button"
-            className={`btn btn-sm ${statusFilter === 'Approved' ? 'btn-primary' : 'btn-outline'}`}
-            onClick={() => setStatusFilter('Approved')}
-          >
-            Approved ({approvedCount})
-          </button>
-          {rejectedCount > 0 && (
-            <button
-              type="button"
-              className={`btn btn-sm ${statusFilter === 'Rejected' ? 'btn-primary' : 'btn-outline'}`}
-              onClick={() => setStatusFilter('Rejected')}
-            >
-              Rejected ({rejectedCount})
-            </button>
-          )}
+        {/* Status Filter Tabs (pill row; scrolls sideways on mobile) */}
+        <div className="chip-row -mx-4 mb-4 flex scroll-px-4 gap-2 overflow-x-auto px-4 pb-1 md:mx-0 md:flex-wrap md:px-0" role="group" aria-label="Filter by status">
+          {statusTabs
+            .filter((t) => t.value !== 'Rejected' || rejectedCount > 0)
+            .map((t) => {
+              const active = statusFilter === t.value;
+              return (
+                <button
+                  key={t.value}
+                  type="button"
+                  aria-pressed={active}
+                  onClick={() => setStatusFilter(t.value)}
+                  className={cn(
+                    'inline-flex h-9 shrink-0 snap-start items-center gap-1.5 whitespace-nowrap rounded-full border px-4 text-[0.8rem] font-semibold transition-colors duration-200 ease-out',
+                    active
+                      ? 'border-primary bg-primary text-primary-foreground'
+                      : 'border-border bg-transparent text-text-secondary hover:text-foreground max-md:glass'
+                  )}
+                >
+                  {t.label}
+                  <span className="tabular-nums opacity-70">{t.count}</span>
+                </button>
+              );
+            })}
         </div>
 
         {filteredProposals.length === 0 ? (
@@ -186,7 +181,8 @@ export function DashboardView({
             </button>
           </div>
         ) : (
-          <div className="table-wrapper">
+          <>
+          <div className="table-wrapper max-md:hidden">
             <table className="data-table">
               <thead>
                 <tr>
@@ -277,6 +273,8 @@ export function DashboardView({
               </tbody>
             </table>
           </div>
+          <ProposalList proposals={filteredProposals} onOpenProposal={onOpenProposal} />
+          </>
         )}
       </section>
 
