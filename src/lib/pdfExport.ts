@@ -2,6 +2,29 @@ import { jsPDF } from 'jspdf';
 import { PilotProposal } from '@/types';
 
 /**
+ * Sanitizes strings for PDF Type 1 standard fonts (Helvetica).
+ * Eliminates character distortion, spacing artifacts, and unicode replacement errors
+ * (e.g. '≤' becoming '"d', '✕' becoming apostrophes, '⚠' becoming '&').
+ */
+function sanitizePdfText(str: string): string {
+  if (!str) return '';
+  return str
+    .replace(/[≤]/g, '<= ')
+    .replace(/[≥]/g, '>= ')
+    .replace(/[✓✔]/g, '[OK]')
+    .replace(/[✕✖✗]/g, '[X]')
+    .replace(/[⚠]/g, '[!]')
+    .replace(/[⚖]/g, '[LEGAL]')
+    .replace(/[•●]/g, '-')
+    .replace(/[—–]/g, '-')
+    .replace(/[‘’]/g, "'")
+    .replace(/[“”]/g, '"')
+    .replace(/[…]/g, '...')
+    .replace(/[➔→]/g, '->')
+    .replace(/[^\x00-\x7F]/g, ''); // strip any unsupported non-ASCII characters
+}
+
+/**
  * Generates a clean, professional multi-page PDF document for an ASEAN Pilot Proposal.
  * Follows enterprise styling standards, pagination, and includes the mandatory disclaimer label:
  * "Draft Pilot Proposal — Subject to Business, Technical and Legal Review."
@@ -17,9 +40,9 @@ export function generateProposalPdf(proposal: PilotProposal): jsPDF {
   const pageHeight = 297;
   const marginLeft = 15;
   const marginRight = 15;
-  const contentWidth = pageWidth - marginLeft - marginRight;
+  const contentWidth = pageWidth - marginLeft - marginRight; // 180mm
   const bottomMargin = 20;
-  const headerHeight = 22;
+  const headerHeight = 20;
 
   let cursorY = headerHeight + 5;
 
@@ -42,17 +65,19 @@ export function generateProposalPdf(proposal: PilotProposal): jsPDF {
   };
 
   /**
-   * Draws a section header bar
+   * Draws a section header bar with anti-orphan protection.
+   * Ensures that the section title is NEVER isolated at the bottom of a page
+   * without its accompanying content.
    */
-  const drawSectionHeader = (title: string, badge?: string) => {
-    ensureSpace(14);
+  const drawSectionHeader = (title: string, badge?: string, minContentSpace: number = 24) => {
+    ensureSpace(12 + minContentSpace);
     doc.setFillColor(colorLightBg[0], colorLightBg[1], colorLightBg[2]);
     doc.roundedRect(marginLeft, cursorY, contentWidth, 8, 1.5, 1.5, 'F');
 
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(10.5);
+    doc.setFontSize(10);
     doc.setTextColor(colorPrimary[0], colorPrimary[1], colorPrimary[2]);
-    doc.text(title, marginLeft + 3, cursorY + 5.5);
+    doc.text(sanitizePdfText(title), marginLeft + 3, cursorY + 5.5);
 
     if (badge) {
       doc.setFont('helvetica', 'bold');
@@ -63,7 +88,7 @@ export function generateProposalPdf(proposal: PilotProposal): jsPDF {
       } else {
         doc.setTextColor(colorAccent[0], colorAccent[1], colorAccent[2]);
       }
-      doc.text(badge, marginLeft + contentWidth - 3, cursorY + 5.5, { align: 'right' });
+      doc.text(sanitizePdfText(badge), marginLeft + contentWidth - 3, cursorY + 5.5, { align: 'right' });
     }
 
     cursorY += 12;
@@ -76,78 +101,94 @@ export function generateProposalPdf(proposal: PilotProposal): jsPDF {
   doc.rect(marginLeft, cursorY, contentWidth, 38, 'F');
 
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(9);
+  doc.setFontSize(8.5);
   doc.setTextColor(14, 165, 233); // Cyan
-  doc.text('ASEAN POC-ARCHITECT • PROOF-OF-CONCEPT PROPOSAL', marginLeft + 5, cursorY + 7);
+  doc.text('ASEAN POC-ARCHITECT - PROOF-OF-CONCEPT PROPOSAL', marginLeft + 5, cursorY + 7);
 
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(14);
+  doc.setFontSize(13);
   doc.setTextColor(255, 255, 255);
-  const titleLines = doc.splitTextToSize(proposal.challengeTitle, contentWidth - 10);
-  doc.text(titleLines, marginLeft + 5, cursorY + 14);
+  const titleLines = doc.splitTextToSize(sanitizePdfText(proposal.challengeTitle), contentWidth - 10);
+  doc.text(titleLines.slice(0, 2), marginLeft + 5, cursorY + 14);
 
   // Status & Metadata bar inside cover
   doc.setFont('helvetica', 'normal');
-  doc.setFontSize(8.5);
+  doc.setFontSize(8);
   doc.setTextColor(203, 213, 225);
   const statusStr = `Status: ${proposal.status.toUpperCase()}  |  Version: v${proposal.version}.0  |  Proposal ID: ${proposal.id}`;
-  doc.text(statusStr, marginLeft + 5, cursorY + 33);
+  doc.text(sanitizePdfText(statusStr), marginLeft + 5, cursorY + 33);
 
   cursorY += 44;
 
-  // Key Parties Overview Grid
-  ensureSpace(24);
-  doc.setFillColor(colorLightBg[0], colorLightBg[1], colorLightBg[2]);
-  doc.roundedRect(marginLeft, cursorY, contentWidth, 22, 2, 2, 'F');
-  doc.setDrawColor(226, 232, 240);
-  doc.roundedRect(marginLeft, cursorY, contentWidth, 22, 2, 2, 'S');
+  // ---------------------------------------------------------------------------
+  // KEY PARTIES OVERVIEW GRID (Strict column containment to prevent overlaps)
+  // ---------------------------------------------------------------------------
+  ensureSpace(28);
+  const cardHeight = 24;
+  const colWidth = (contentWidth - 10) / 3; // ~56.6mm each
 
-  // Enterprise Column
+  doc.setFillColor(colorLightBg[0], colorLightBg[1], colorLightBg[2]);
+  doc.roundedRect(marginLeft, cursorY, contentWidth, cardHeight, 2, 2, 'F');
+  doc.setDrawColor(226, 232, 240);
+  doc.roundedRect(marginLeft, cursorY, contentWidth, cardHeight, 2, 2, 'S');
+
+  // Column 1: Enterprise Partner
+  const col1X = marginLeft + 4;
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(8);
+  doc.setFontSize(7.5);
   doc.setTextColor(colorSecondary[0], colorSecondary[1], colorSecondary[2]);
-  doc.text('ENTERPRISE PARTNER', marginLeft + 5, cursorY + 5);
-  doc.setFontSize(10);
+  doc.text('ENTERPRISE PARTNER', col1X, cursorY + 5);
+
+  doc.setFontSize(9);
   doc.setTextColor(colorPrimary[0], colorPrimary[1], colorPrimary[2]);
-  doc.text(proposal.enterpriseName, marginLeft + 5, cursorY + 10.5);
-  doc.setFontSize(8);
+  const entLines = doc.splitTextToSize(sanitizePdfText(proposal.enterpriseName), colWidth - 4);
+  doc.text(entLines.slice(0, 2), col1X, cursorY + 10);
+
+  doc.setFontSize(7.5);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(colorSecondary[0], colorSecondary[1], colorSecondary[2]);
-  doc.text('Problem Owner', marginLeft + 5, cursorY + 15);
+  doc.text('Problem Owner', col1X, cursorY + 19);
 
-  // Startup Column
-  const col2X = marginLeft + (contentWidth / 3);
+  // Column 2: Startup Solution Partner
+  const col2X = marginLeft + 4 + colWidth + 5;
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(8);
+  doc.setFontSize(7.5);
   doc.setTextColor(colorSecondary[0], colorSecondary[1], colorSecondary[2]);
   doc.text('STARTUP SOLUTION PARTNER', col2X, cursorY + 5);
-  doc.setFontSize(10);
+
+  doc.setFontSize(9);
   doc.setTextColor(colorAccent[0], colorAccent[1], colorAccent[2]);
-  doc.text(`${proposal.startupName} [${proposal.startupCountry}]`, col2X, cursorY + 10.5);
-  doc.setFontSize(7.5);
+  const startupTitle = `${proposal.startupName} [${proposal.startupCountry}]`;
+  const startupLines = doc.splitTextToSize(sanitizePdfText(startupTitle), colWidth - 4);
+  doc.text(startupLines.slice(0, 2), col2X, cursorY + 10);
+
+  doc.setFontSize(7);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(colorSecondary[0], colorSecondary[1], colorSecondary[2]);
   const startupProvenance = proposal.sourceSnapshot?.startup?.isSyntheticDemo
     ? 'Synthetic Benchmark Control'
     : `Verified: ${proposal.sourceSnapshot?.startup?.sourceOrganisation || 'Enterprise Singapore / Cradle'}`;
-  doc.text(startupProvenance, col2X, cursorY + 15);
+  const provLines = doc.splitTextToSize(sanitizePdfText(startupProvenance), colWidth - 4);
+  doc.text(provLines[0], col2X, cursorY + 19);
 
-  // Pilot Duration Column
-  const col3X = marginLeft + (2 * (contentWidth / 3));
+  // Column 3: Pilot Duration
+  const col3X = marginLeft + 4 + (colWidth + 5) * 2;
   const totalWeeks = proposal.milestones?.reduce((acc, m) => acc + m.durationWeeks, 0) || 8;
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(8);
+  doc.setFontSize(7.5);
   doc.setTextColor(colorSecondary[0], colorSecondary[1], colorSecondary[2]);
   doc.text('PILOT DURATION', col3X, cursorY + 5);
-  doc.setFontSize(10);
+
+  doc.setFontSize(9);
   doc.setTextColor(colorPrimary[0], colorPrimary[1], colorPrimary[2]);
-  doc.text(`${totalWeeks} Weeks (60-Day Trial)`, col3X, cursorY + 10.5);
-  doc.setFontSize(8);
+  doc.text(`${totalWeeks} Weeks (60-Day Trial)`, col3X, cursorY + 10);
+
+  doc.setFontSize(7.5);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(colorSecondary[0], colorSecondary[1], colorSecondary[2]);
-  doc.text('Phased Staging Sandbox', col3X, cursorY + 15);
+  doc.text('Phased Staging Sandbox', col3X, cursorY + 19);
 
-  cursorY += 28;
+  cursorY += cardHeight + 6;
 
   // Human Sign-off Verification if Approved
   if (proposal.status === 'Approved' && proposal.approvalRecord) {
@@ -159,13 +200,13 @@ export function generateProposalPdf(proposal: PilotProposal): jsPDF {
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(8.5);
     doc.setTextColor(colorGreen[0], colorGreen[1], colorGreen[2]);
-    doc.text('✓ FORMAL HUMAN SIGN-OFF RECORDED', marginLeft + 4, cursorY + 5);
+    doc.text('[VERIFIED] FORMAL HUMAN SIGN-OFF RECORDED', marginLeft + 4, cursorY + 5);
 
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(8);
     doc.setTextColor(colorPrimary[0], colorPrimary[1], colorPrimary[2]);
     const approverText = `Approved by: ${proposal.approvalRecord.decidedBy || 'Enterprise Sponsor'} (${proposal.approvalRecord.deciderRole || 'Executive'}) on ${new Date(proposal.approvalRecord.decidedAt || proposal.updatedAt).toLocaleDateString()}`;
-    doc.text(approverText, marginLeft + 4, cursorY + 10);
+    doc.text(sanitizePdfText(approverText), marginLeft + 4, cursorY + 10);
     cursorY += 18;
   }
 
@@ -175,20 +216,20 @@ export function generateProposalPdf(proposal: PilotProposal): jsPDF {
   const execBadge = proposal.editedFields?.includes('executiveSummary')
     ? '[USER EDITED]'
     : '[AI GENERATED]';
-  drawSectionHeader('1. Executive Summary', execBadge);
+  drawSectionHeader('1. Executive Summary', execBadge, 20);
 
   doc.setFont('helvetica', 'normal');
-  doc.setFontSize(9);
+  doc.setFontSize(8.5);
   doc.setTextColor(colorDark[0], colorDark[1], colorDark[2]);
-  const execLines = doc.splitTextToSize(proposal.executiveSummary, contentWidth);
-  ensureSpace(execLines.length * 4.5);
+  const execLines = doc.splitTextToSize(sanitizePdfText(proposal.executiveSummary), contentWidth);
+  ensureSpace(execLines.length * 4.2);
   doc.text(execLines, marginLeft, cursorY);
-  cursorY += execLines.length * 4.5 + 6;
+  cursorY += execLines.length * 4.2 + 6;
 
   // ---------------------------------------------------------------------------
   // SECTION 2: PROBLEM STATEMENT & PROPOSED SOLUTION
   // ---------------------------------------------------------------------------
-  drawSectionHeader('2. Problem Statement & Proposed Pilot Solution');
+  drawSectionHeader('2. Problem Statement & Proposed Pilot Solution', undefined, 25);
 
   // Problem Box
   doc.setFont('helvetica', 'bold');
@@ -200,7 +241,7 @@ export function generateProposalPdf(proposal: PilotProposal): jsPDF {
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(8.5);
   doc.setTextColor(colorDark[0], colorDark[1], colorDark[2]);
-  const problemLines = doc.splitTextToSize(proposal.problemStatement, contentWidth);
+  const problemLines = doc.splitTextToSize(sanitizePdfText(proposal.problemStatement), contentWidth);
   ensureSpace(problemLines.length * 4.2);
   doc.text(problemLines, marginLeft, cursorY);
   cursorY += problemLines.length * 4.2 + 5;
@@ -215,7 +256,7 @@ export function generateProposalPdf(proposal: PilotProposal): jsPDF {
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(8.5);
   doc.setTextColor(colorDark[0], colorDark[1], colorDark[2]);
-  const solutionLines = doc.splitTextToSize(proposal.proposedSolution, contentWidth);
+  const solutionLines = doc.splitTextToSize(sanitizePdfText(proposal.proposedSolution), contentWidth);
   ensureSpace(solutionLines.length * 4.2);
   doc.text(solutionLines, marginLeft, cursorY);
   cursorY += solutionLines.length * 4.2 + 6;
@@ -226,7 +267,7 @@ export function generateProposalPdf(proposal: PilotProposal): jsPDF {
   const scopeBadge = (proposal.editedFields?.includes('inScope') || proposal.editedFields?.includes('outOfScope'))
     ? '[USER EDITED]'
     : '[AI GENERATED]';
-  drawSectionHeader('3. Scope Boundaries & Technical Architecture', scopeBadge);
+  drawSectionHeader('3. Scope Boundaries & Technical Architecture', scopeBadge, 30);
 
   // In Scope List
   doc.setFont('helvetica', 'bold');
@@ -239,14 +280,14 @@ export function generateProposalPdf(proposal: PilotProposal): jsPDF {
   doc.setFontSize(8);
   doc.setTextColor(colorDark[0], colorDark[1], colorDark[2]);
   for (const item of proposal.inScope) {
-    const itemLines = doc.splitTextToSize(`• ${item}`, contentWidth - 4);
+    const itemLines = doc.splitTextToSize(`- ${sanitizePdfText(item)}`, contentWidth - 4);
     ensureSpace(itemLines.length * 3.8);
     doc.text(itemLines, marginLeft + 2, cursorY);
     cursorY += itemLines.length * 3.8 + 1.2;
   }
   cursorY += 3;
 
-  // Out of Scope List
+  // Out of Scope List (Fixed unicode cross to clean standard ASCII bullet)
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(8.5);
   doc.setTextColor(190, 18, 60); // Red
@@ -257,7 +298,7 @@ export function generateProposalPdf(proposal: PilotProposal): jsPDF {
   doc.setFontSize(8);
   doc.setTextColor(colorDark[0], colorDark[1], colorDark[2]);
   for (const item of proposal.outOfScope) {
-    const itemLines = doc.splitTextToSize(`✕ ${item}`, contentWidth - 4);
+    const itemLines = doc.splitTextToSize(`[X]  ${sanitizePdfText(item)}`, contentWidth - 4);
     ensureSpace(itemLines.length * 3.8);
     doc.text(itemLines, marginLeft + 2, cursorY);
     cursorY += itemLines.length * 3.8 + 1.2;
@@ -275,7 +316,7 @@ export function generateProposalPdf(proposal: PilotProposal): jsPDF {
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(8);
     doc.setTextColor(colorSecondary[0], colorSecondary[1], colorSecondary[2]);
-    const archLines = doc.splitTextToSize(proposal.integrationArchitecture, contentWidth);
+    const archLines = doc.splitTextToSize(sanitizePdfText(proposal.integrationArchitecture), contentWidth);
     ensureSpace(archLines.length * 3.8);
     doc.text(archLines, marginLeft, cursorY);
     cursorY += archLines.length * 3.8 + 6;
@@ -287,7 +328,7 @@ export function generateProposalPdf(proposal: PilotProposal): jsPDF {
   const milestoneBadge = proposal.editedFields?.includes('milestones')
     ? '[USER EDITED]'
     : '[AI GENERATED]';
-  drawSectionHeader('4. Phased Pilot Roadmap & Acceptance Gates', milestoneBadge);
+  drawSectionHeader('4. Phased Pilot Roadmap & Acceptance Gates', milestoneBadge, 35);
 
   proposal.milestones?.forEach((m, idx) => {
     ensureSpace(28);
@@ -297,7 +338,7 @@ export function generateProposalPdf(proposal: PilotProposal): jsPDF {
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(8.5);
     doc.setTextColor(colorPrimary[0], colorPrimary[1], colorPrimary[2]);
-    doc.text(`${idx + 1}. ${m.title}`, marginLeft + 3, cursorY + 4.2);
+    doc.text(`${idx + 1}. ${sanitizePdfText(m.title)}`, marginLeft + 3, cursorY + 4.2);
 
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(8);
@@ -315,7 +356,7 @@ export function generateProposalPdf(proposal: PilotProposal): jsPDF {
     doc.setFontSize(7.5);
     doc.setTextColor(colorDark[0], colorDark[1], colorDark[2]);
     m.deliverables?.forEach((deliv) => {
-      const delivLines = doc.splitTextToSize(`- ${deliv}`, contentWidth - 6);
+      const delivLines = doc.splitTextToSize(`- ${sanitizePdfText(deliv)}`, contentWidth - 6);
       ensureSpace(delivLines.length * 3.4);
       doc.text(delivLines, marginLeft + 4, cursorY);
       cursorY += delivLines.length * 3.4 + 0.8;
@@ -330,7 +371,7 @@ export function generateProposalPdf(proposal: PilotProposal): jsPDF {
     const critX = marginLeft + 38;
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(colorDark[0], colorDark[1], colorDark[2]);
-    const critLines = doc.splitTextToSize(m.acceptanceCriteria, contentWidth - 40);
+    const critLines = doc.splitTextToSize(sanitizePdfText(m.acceptanceCriteria), contentWidth - 40);
     doc.text(critLines, critX, cursorY);
     cursorY += critLines.length * 3.4 + 4;
   });
@@ -342,12 +383,13 @@ export function generateProposalPdf(proposal: PilotProposal): jsPDF {
   const raciBadge = proposal.editedFields?.includes('raciMatrix')
     ? '[USER EDITED]'
     : '[AI GENERATED]';
-  drawSectionHeader('5. Governance & Responsibility Matrix (RACI)', raciBadge);
+  drawSectionHeader('5. Governance & Responsibility Matrix (RACI)', raciBadge, 35);
 
   // Table header
   ensureSpace(12);
   doc.setFillColor(colorPrimary[0], colorPrimary[1], colorPrimary[2]);
   doc.rect(marginLeft, cursorY, contentWidth, 6, 'F');
+
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(7.5);
   doc.setTextColor(255, 255, 255);
@@ -358,7 +400,7 @@ export function generateProposalPdf(proposal: PilotProposal): jsPDF {
   cursorY += 6;
 
   proposal.raciMatrix?.forEach((r, idx) => {
-    ensureSpace(9);
+    ensureSpace(8);
     if (idx % 2 === 1) {
       doc.setFillColor(248, 250, 252);
       doc.rect(marginLeft, cursorY, contentWidth, 7, 'F');
@@ -366,19 +408,19 @@ export function generateProposalPdf(proposal: PilotProposal): jsPDF {
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(7.5);
     doc.setTextColor(colorDark[0], colorDark[1], colorDark[2]);
-    const actLines = doc.splitTextToSize(r.activity, 80);
+    const actLines = doc.splitTextToSize(sanitizePdfText(r.activity), 80);
     doc.text(actLines[0], marginLeft + 3, cursorY + 4.5);
 
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(colorAccent[0], colorAccent[1], colorAccent[2]);
-    doc.text(r.enterpriseRole, marginLeft + 88, cursorY + 4.5);
+    doc.text(sanitizePdfText(r.enterpriseRole), marginLeft + 88, cursorY + 4.5);
     doc.setTextColor(colorGreen[0], colorGreen[1], colorGreen[2]);
-    doc.text(r.startupRole, marginLeft + 112, cursorY + 4.5);
+    doc.text(sanitizePdfText(r.startupRole), marginLeft + 112, cursorY + 4.5);
 
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(7);
     doc.setTextColor(colorSecondary[0], colorSecondary[1], colorSecondary[2]);
-    const noteLines = doc.splitTextToSize(r.notes || '', contentWidth - 134);
+    const noteLines = doc.splitTextToSize(sanitizePdfText(r.notes || ''), contentWidth - 134);
     doc.text(noteLines[0] || '', marginLeft + 132, cursorY + 4.5);
     cursorY += 7;
   });
@@ -390,7 +432,7 @@ export function generateProposalPdf(proposal: PilotProposal): jsPDF {
   const kpiBadge = proposal.editedFields?.includes('kpis')
     ? '[USER EDITED]'
     : '[AI GENERATED]';
-  drawSectionHeader('6. Target Success KPIs & Validation Methodology', kpiBadge);
+  drawSectionHeader('6. Target Success KPIs & Validation Methodology', kpiBadge, 30);
 
   proposal.kpis?.forEach((k, idx) => {
     ensureSpace(16);
@@ -400,25 +442,25 @@ export function generateProposalPdf(proposal: PilotProposal): jsPDF {
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(8);
     doc.setTextColor(colorPrimary[0], colorPrimary[1], colorPrimary[2]);
-    doc.text(`KPI #${idx + 1}: ${k.metric}`, marginLeft + 3, cursorY + 4.2);
+    doc.text(`KPI #${idx + 1}: ${sanitizePdfText(k.metric)}`, marginLeft + 3, cursorY + 4.2);
 
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(7.5);
     doc.setTextColor(colorSecondary[0], colorSecondary[1], colorSecondary[2]);
-    doc.text(`Baseline: ${k.baseline}`, marginLeft + 3, cursorY + 8);
+    doc.text(`Baseline: ${sanitizePdfText(k.baseline)}`, marginLeft + 3, cursorY + 8);
 
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(colorGreen[0], colorGreen[1], colorGreen[2]);
-    doc.text(`Target: ${k.target} (Subject to Sandbox Validation)`, marginLeft + 3, cursorY + 11.5);
+    doc.text(`Target: ${sanitizePdfText(k.target)} (Subject to Sandbox Validation)`, marginLeft + 3, cursorY + 11.5);
 
     cursorY += 16.5;
   });
   cursorY += 3;
 
   // ---------------------------------------------------------------------------
-  // SECTION 7: RISKS & SOVEREIGN DATA RESIDENCY
+  // SECTION 7: RISKS & SOVEREIGN DATA RESIDENCY (Protected from orphan headers)
   // ---------------------------------------------------------------------------
-  drawSectionHeader('7. Technical Risks & Sovereign Data Residency Plan');
+  drawSectionHeader('7. Technical Risks & Sovereign Data Residency Plan', undefined, 38);
 
   ensureSpace(20);
   doc.setFont('helvetica', 'bold');
@@ -431,7 +473,7 @@ export function generateProposalPdf(proposal: PilotProposal): jsPDF {
   doc.setFontSize(7.5);
   doc.setTextColor(colorDark[0], colorDark[1], colorDark[2]);
   proposal.technicalRisks?.forEach((r) => {
-    const riskLines = doc.splitTextToSize(`⚠ ${r}`, contentWidth - 4);
+    const riskLines = doc.splitTextToSize(`* ${sanitizePdfText(r)}`, contentWidth - 4);
     ensureSpace(riskLines.length * 3.4);
     doc.text(riskLines, marginLeft + 2, cursorY);
     cursorY += riskLines.length * 3.4 + 1;
@@ -439,7 +481,7 @@ export function generateProposalPdf(proposal: PilotProposal): jsPDF {
   cursorY += 3;
 
   if (proposal.dataResidencyPlan) {
-    ensureSpace(12);
+    ensureSpace(14);
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(8);
     doc.setTextColor(colorAccent[0], colorAccent[1], colorAccent[2]);
@@ -449,7 +491,7 @@ export function generateProposalPdf(proposal: PilotProposal): jsPDF {
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(7.5);
     doc.setTextColor(colorDark[0], colorDark[1], colorDark[2]);
-    const resLines = doc.splitTextToSize(proposal.dataResidencyPlan, contentWidth);
+    const resLines = doc.splitTextToSize(sanitizePdfText(proposal.dataResidencyPlan), contentWidth);
     ensureSpace(resLines.length * 3.4);
     doc.text(resLines, marginLeft, cursorY);
     cursorY += resLines.length * 3.4 + 5;
@@ -458,7 +500,7 @@ export function generateProposalPdf(proposal: PilotProposal): jsPDF {
   // ---------------------------------------------------------------------------
   // SECTION 8: MANDATORY ADVISORY DISCLAIMER
   // ---------------------------------------------------------------------------
-  ensureSpace(22);
+  ensureSpace(24);
   doc.setFillColor(254, 243, 199); // Amber tint
   doc.setDrawColor(251, 191, 36);
   doc.roundedRect(marginLeft, cursorY, contentWidth, 18, 1.5, 1.5, 'FD');
@@ -466,14 +508,14 @@ export function generateProposalPdf(proposal: PilotProposal): jsPDF {
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(8);
   doc.setTextColor(180, 83, 9);
-  doc.text('⚖ REGULATORY & STATUTORY DISCLAIMER', marginLeft + 3, cursorY + 4.5);
+  doc.text('REGULATORY & STATUTORY DISCLAIMER', marginLeft + 3, cursorY + 4.5);
 
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(7);
   doc.setTextColor(120, 53, 15);
   const disclaimerText = proposal.legalDisclaimer ||
     'ADVISORY NOTICE: This Proof-of-Concept proposal is a technical and operational exploration draft generated by ASEAN POC-Architect. It does not constitute formal statutory regulatory authorization, legal contract execution, or binding commercial procurement. All legal covenants and compliance reviews must be executed through formal corporate channels.';
-  const discLines = doc.splitTextToSize(disclaimerText, contentWidth - 6);
+  const discLines = doc.splitTextToSize(sanitizePdfText(disclaimerText), contentWidth - 6);
   doc.text(discLines, marginLeft + 3, cursorY + 8.5);
 
   // ---------------------------------------------------------------------------
@@ -490,7 +532,7 @@ export function generateProposalPdf(proposal: PilotProposal): jsPDF {
     doc.setFontSize(8);
     doc.setTextColor(225, 29, 72); // Red alert label
     doc.text(
-      'Draft Pilot Proposal — Subject to Business, Technical and Legal Review.',
+      'Draft Pilot Proposal - Subject to Business, Technical and Legal Review.',
       pageWidth / 2,
       7,
       { align: 'center' }
@@ -506,7 +548,7 @@ export function generateProposalPdf(proposal: PilotProposal): jsPDF {
     doc.setFontSize(7.5);
     doc.setTextColor(colorSecondary[0], colorSecondary[1], colorSecondary[2]);
     doc.text(
-      'ASEAN POC-Architect • Confidential Staged Pilot Proposal',
+      'ASEAN POC-Architect - Confidential Staged Pilot Proposal',
       marginLeft,
       pageHeight - 7
     );

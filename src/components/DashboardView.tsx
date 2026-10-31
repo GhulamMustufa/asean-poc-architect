@@ -176,96 +176,87 @@ export function DashboardView({
             </button>
           </div>
         ) : (
-          <div className="table-wrapper">
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>Challenge & Enterprise</th>
-                  <th>Matched Startup</th>
-                  <th>Status</th>
-                  <th>Next Action</th>
-                  <th>Updated</th>
-                  <th style={{ textAlign: 'right' }}>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredProposals.map((p) => {
-                  const isApproved = p.status === 'Approved';
-                  const isUnderReview = p.status === 'Under Review' || (p.status as any) === 'In Review';
-                  const isRejected = p.status === 'Rejected';
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            {filteredProposals.map((p) => {
+              const isApproved = p.status === 'Approved';
+              const isUnderReview = p.status === 'Under Review' || (p.status as any) === 'In Review';
+              const isRejected = p.status === 'Rejected';
 
-                  return (
-                    <tr key={p.id}>
-                      <td style={{ maxWidth: '280px' }}>
-                        <div style={{ fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                          {p.challengeTitle}
-                        </div>
-                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                          {p.enterpriseName} • {p.milestones?.reduce((acc, m) => acc + m.durationWeeks, 0) || 8} wks
-                        </div>
-                      </td>
-                      <td>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                          <span style={{ fontWeight: 600, color: 'var(--accent-cyan)' }}>{p.startupName}</span>
-                          <span className="badge badge-country" style={{ fontSize: '0.7rem' }}>{p.startupCountry}</span>
-                        </div>
-                        {p.editedFields && p.editedFields.length > 0 && (
-                          <span style={{ fontSize: '0.7rem', color: 'var(--accent-amber)' }}>
-                            ✎ {p.editedFields.length} user edit{p.editedFields.length > 1 ? 's' : ''}
+              return (
+                <div key={p.id} className="deal-card">
+                  {/* Left: Enterprise & Startup Info */}
+                  <div style={{ flex: '1 1 340px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.4rem', flexWrap: 'wrap' }}>
+                      <span className="badge badge-country">{p.startupCountry}</span>
+                      <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}>
+                        {p.enterpriseName}
+                      </span>
+                      <span style={{ color: 'var(--text-muted)' }}>➔</span>
+                      <span style={{ fontSize: '0.875rem', fontWeight: 700, color: 'var(--accent-cyan)' }}>
+                        {p.startupName}
+                      </span>
+                    </div>
+
+                    <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#ffffff', margin: '0.2rem 0' }}>
+                      {p.challengeTitle}
+                    </h3>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginTop: '0.5rem', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                      <span>⏱ {p.milestones?.reduce((acc, m) => acc + m.durationWeeks, 0) || 8}-Week Pilot</span>
+                      <span>•</span>
+                      <span>Updated {new Date(p.updatedAt).toLocaleDateString('en-SG', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                      {p.nextAction && (
+                        <>
+                          <span>•</span>
+                          <span style={{ color: isApproved ? 'var(--accent-emerald)' : isUnderReview ? 'var(--accent-amber)' : 'var(--text-secondary)' }}>
+                            Next: {p.nextAction}
                           </span>
-                        )}
-                      </td>
-                      <td>
-                        <span
-                          className={`badge ${
-                            isApproved
-                              ? 'badge-approved'
-                              : isUnderReview
-                              ? 'badge-under-review'
-                              : isRejected
-                              ? 'badge-rejected'
-                              : 'badge-draft'
-                          }`}
+                        </>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Right: Status & Actions */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+                    <span
+                      className={`badge ${
+                        isApproved
+                          ? 'badge-approved'
+                          : isUnderReview
+                          ? 'badge-under-review'
+                          : isRejected
+                          ? 'badge-rejected'
+                          : 'badge-draft'
+                      }`}
+                      style={{ fontSize: '0.85rem', padding: '0.4rem 0.9rem' }}
+                    >
+                      ● {p.status}
+                    </span>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      {isApproved && (
+                        <button
+                          type="button"
+                          className="btn btn-outline btn-sm"
+                          style={{ borderColor: 'var(--accent-emerald)', color: 'var(--accent-emerald)' }}
+                          onClick={() => downloadProposalPdf(p)}
+                          title="Download official PDF"
                         >
-                          ● {p.status}
-                        </span>
-                      </td>
-                      <td>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.8rem', color: isApproved ? 'var(--accent-emerald)' : isUnderReview ? 'var(--accent-amber)' : 'var(--text-secondary)' }}>
-                          <span>▸</span>
-                          <span>{p.nextAction || 'Review proposal'}</span>
-                        </div>
-                      </td>
-                      <td style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                        {new Date(p.updatedAt).toLocaleDateString('en-SG', { month: 'short', day: 'numeric', year: 'numeric' })}
-                      </td>
-                      <td style={{ textAlign: 'right' }}>
-                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.4rem' }}>
-                          {isApproved && (
-                            <button
-                              type="button"
-                              className="btn btn-outline btn-sm"
-                              style={{ borderColor: 'var(--accent-emerald)', color: 'var(--accent-emerald)', padding: '0.25rem 0.5rem' }}
-                              onClick={() => downloadProposalPdf(p)}
-                              title="Download official PDF"
-                            >
-                              PDF ↓
-                            </button>
-                          )}
-                          <button
-                            type="button"
-                            className="btn btn-outline btn-sm"
-                            onClick={() => onOpenProposal(p)}
-                          >
-                            Open →
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                          PDF ↓
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        className="btn btn-primary btn-sm"
+                        onClick={() => onOpenProposal(p)}
+                      >
+                        Open Proposal →
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         )}
       </section>

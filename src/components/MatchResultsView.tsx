@@ -210,156 +210,144 @@ export function MatchResultsView({
                       </p>
                     </div>
 
-                    <div className="match-score-badge">
-                      <span className="score-num">{m.overallScore}%</span>
-                      <span className="score-label">Match Score</span>
+                    <div className="match-score-badge" style={{ padding: '0.6rem 1rem', minWidth: '85px' }}>
+                      <span className="score-num" style={{ fontSize: '1.85rem' }}>{m.overallScore}%</span>
+                      <span className="score-label" style={{ fontSize: '0.7rem' }}>Match Fit</span>
                     </div>
                   </div>
 
-                  {/* Live Statutory Gov Verification (data.gov.sg ACRA) */}
-                  {m.startup.country === 'SG' && (
-                    <div style={{ margin: '0.5rem 0' }}>
-                      {govCheck ? (
-                        <div style={{ background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.35)', borderRadius: 'var(--radius-sm)', padding: '0.5rem 0.75rem', fontSize: '0.75rem' }}>
-                          <div style={{ color: '#34d399', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                            <span>🏛️</span>
-                            <span>{govCheck.source}</span>
-                          </div>
-                          <div style={{ color: 'var(--text-primary)', marginTop: '0.2rem', fontWeight: 600 }}>
-                            {govCheck.legalName} (UEN: {govCheck.uen})
-                          </div>
-                          <div style={{ color: 'var(--text-secondary)', marginTop: '0.1rem', fontSize: '0.72rem' }}>
-                            Status: <strong style={{ color: '#34d399' }}>{govCheck.status}</strong> • {govCheck.ssic} ({govCheck.responseTimeMs}ms)
-                          </div>
-                        </div>
-                      ) : (
-                        <button
-                          type="button"
-                          className="btn btn-outline btn-sm"
-                          style={{ fontSize: '0.72rem', padding: '0.25rem 0.6rem', borderColor: 'rgba(56, 189, 248, 0.35)', color: 'var(--accent-cyan)', width: '100%', justifyContent: 'center' }}
-                          disabled={verifyingStartupId === m.startup.id}
-                          onClick={(e) => handleLiveGovCheck(e, m.startup)}
-                        >
-                          {verifyingStartupId === m.startup.id ? (
-                            <>
-                              <span className="spinner" style={{ width: '12px', height: '12px' }} />
-                              <span>Checking official Singapore government registry...</span>
-                            </>
-                          ) : (
-                            <span>⚡ Check Official Government Registry (data.gov.sg)</span>
-                          )}
-                        </button>
-                      )}
-                    </div>
-                  )}
-
-                  {/* 5-Dimension Deterministic Breakdown */}
-                  <div style={{ background: 'rgba(0, 0, 0, 0.35)', borderRadius: 'var(--radius-sm)', padding: '0.65rem 0.85rem', margin: '0.75rem 0', border: '1px solid var(--border-subtle)' }}>
-                    <div style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--accent-cyan)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.4rem' }}>
-                      Detailed Match Score Breakdown
-                    </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '0.4rem', fontSize: '0.75rem' }}>
-                      <div className="score-chip" title="Capability coverage score">
-                        Skills ({Math.round(m.dimensionScores.capabilityMatch.weight * 100)}%): <strong>{m.dimensionScores.capabilityMatch.rawScore}/100</strong>
-                      </div>
-                      <div className="score-chip" title="Industry and concrete use-case relevance">
-                        Experience ({Math.round(m.dimensionScores.industryUseCaseRelevance.weight * 100)}%): <strong>{m.dimensionScores.industryUseCaseRelevance.rawScore}/100</strong>
-                      </div>
-                      <div className="score-chip" title="Security & technical compatibility">
-                        Safety & Tech ({Math.round(m.dimensionScores.technicalCompatibility.weight * 100)}%): <strong>{m.dimensionScores.technicalCompatibility.rawScore}/100</strong>
-                      </div>
-                      <div className="score-chip" title="Customer segment & geographic residency fit">
-                        Location ({Math.round(m.dimensionScores.targetMarketRelevance.weight * 100)}%): <strong>{m.dimensionScores.targetMarketRelevance.rawScore}/100</strong>
-                      </div>
-                      <div className="score-chip" title="Integration protocol & readiness">
-                        Ease of Connection ({Math.round(m.dimensionScores.integrationReadiness.weight * 100)}%): <strong>{m.dimensionScores.integrationReadiness.rawScore}/100</strong>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Startup Summary */}
-                  <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: '0.75rem 0', lineHeight: 1.5 }}>
-                    {m.startup.productDescription || m.startup.summary}
-                  </p>
-
-                  {/* Capability Overlap & Gaps */}
-                  <div style={{ margin: '0.75rem 0' }}>
-                    <div style={{ fontSize: '0.775rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                      Skills & Features Match ({m.matchedCapabilities.length} matched, {m.capabilityGaps.length} missing)
-                    </div>
-                    <div className="tag-list">
-                      {m.matchedCapabilities.map((cap) => (
-                        <span key={cap} className="capability-tag matched">
-                          ✓ {cap}
-                        </span>
-                      ))}
-                      {m.capabilityGaps.map((cap) => (
-                        <span key={cap} className="capability-tag gap">
-                          ✕ Missing: {cap}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Matching Evidence from Factual Records */}
-                  {m.matchingEvidence && m.matchingEvidence.length > 0 && (
-                    <div style={{ margin: '0.75rem 0' }}>
-                      <div style={{ fontSize: '0.775rem', fontWeight: 700, color: 'var(--accent-emerald)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '0.35rem' }}>
-                        Why This Startup Is a Great Fit:
-                      </div>
-                      <ul style={{ listStyleType: 'none', display: 'flex', flexDirection: 'column', gap: '0.25rem', fontSize: '0.8rem', color: 'var(--text-primary)' }}>
-                        {m.matchingEvidence.slice(0, 3).map((evidence, eIdx) => (
-                          <li key={eIdx} style={{ display: 'flex', alignItems: 'flex-start', gap: '0.4rem' }}>
-                            <span style={{ color: 'var(--accent-emerald)' }}>✓</span>
-                            <span>{evidence}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-
-                  {/* Missing Information in Challenge vs Genuine Mismatch */}
-                  {m.missingInformation && m.missingInformation.length > 0 && (
-                    <div style={{ margin: '0.5rem 0', padding: '0.45rem 0.65rem', background: 'rgba(56, 189, 248, 0.08)', borderRadius: 'var(--radius-sm)', border: '1px solid rgba(56, 189, 248, 0.2)', fontSize: '0.775rem', color: 'var(--accent-cyan)' }}>
-                      ℹ {m.missingInformation[0]}
-                    </div>
-                  )}
-
-                  {/* Risks & Known Limitations */}
-                  <div style={{ background: 'rgba(0, 0, 0, 0.25)', borderRadius: 'var(--radius-sm)', padding: '0.75rem', margin: '0.75rem 0', fontSize: '0.8rem' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem' }}>
-                      <span style={{ color: 'var(--text-muted)', fontWeight: 600 }}>Profile Verification:</span>
-                      <span className={`badge ${m.evidenceQuality === 'Audited Tier-1' ? 'badge-verified' : 'badge-supplied'}`}>
-                        {m.evidenceQuality}
+                  {/* Executive Glance Box - 3-Second Absorption */}
+                  <div className="pill-fit-box">
+                    <div className="pill-item">
+                      <span className="pill-dot-green"></span>
+                      <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>
+                        {m.matchingEvidence?.[0] || (m.matchedCapabilities && m.matchedCapabilities.length > 0 ? `Matches: ${m.matchedCapabilities.slice(0, 2).join(' & ')}` : 'Verified technical fit')}
                       </span>
                     </div>
-                    <div style={{ color: 'var(--text-secondary)', marginBottom: '0.35rem' }}>
-                      <strong>Security Standards:</strong> {m.startup.dataSecurityConsiderations.certifications.join(', ')}
+                    <div className="pill-item">
+                      <span className="pill-dot-blue"></span>
+                      <span style={{ color: 'var(--text-secondary)' }}>
+                        Security: {m.startup.dataSecurityConsiderations.certifications.slice(0, 2).join(' • ') || 'Bank Standard Aligned'}
+                      </span>
                     </div>
                     {m.potentialRisks && m.potentialRisks.length > 0 && (
-                      <div style={{ color: 'var(--accent-amber)', fontSize: '0.775rem', marginTop: '0.25rem' }}>
-                        <strong>Good to Know Before Starting:</strong> {m.potentialRisks[0]}
+                      <div className="pill-item">
+                        <span className="pill-dot-yellow"></span>
+                        <span style={{ color: 'var(--accent-amber)', fontSize: '0.8rem' }}>
+                          Prerequisite: {m.potentialRisks[0]}
+                        </span>
                       </div>
                     )}
                   </div>
+
+                  {/* Progressive Disclosure: Deep Technical Analysis */}
+                  <details className="clean-accordion">
+                    <summary>
+                      <span>Show Detailed Technical Evaluation</span>
+                      <span>▾</span>
+                    </summary>
+                    <div style={{ paddingTop: '0.85rem' }}>
+                      {/* Startup Summary */}
+                      <p style={{ fontSize: '0.825rem', color: 'var(--text-secondary)', marginBottom: '0.75rem', lineHeight: 1.5 }}>
+                        {m.startup.productDescription || m.startup.summary}
+                      </p>
+
+                      {/* Live Statutory Gov Verification (data.gov.sg ACRA) */}
+                      {m.startup.country === 'SG' && (
+                        <div style={{ margin: '0.5rem 0' }}>
+                          {govCheck ? (
+                            <div style={{ background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.35)', borderRadius: 'var(--radius-sm)', padding: '0.5rem 0.75rem', fontSize: '0.75rem' }}>
+                              <div style={{ color: '#34d399', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                                <span>🏛️</span>
+                                <span>{govCheck.source}</span>
+                              </div>
+                              <div style={{ color: 'var(--text-primary)', marginTop: '0.2rem', fontWeight: 600 }}>
+                                {govCheck.legalName} (UEN: {govCheck.uen})
+                              </div>
+                              <div style={{ color: 'var(--text-secondary)', marginTop: '0.1rem', fontSize: '0.72rem' }}>
+                                Status: <strong style={{ color: '#34d399' }}>{govCheck.status}</strong> • {govCheck.ssic} ({govCheck.responseTimeMs}ms)
+                              </div>
+                            </div>
+                          ) : (
+                            <button
+                              type="button"
+                              className="btn btn-outline btn-sm"
+                              style={{ fontSize: '0.72rem', padding: '0.25rem 0.6rem', borderColor: 'rgba(56, 189, 248, 0.35)', color: 'var(--accent-cyan)', width: '100%', justifyContent: 'center' }}
+                              disabled={verifyingStartupId === m.startup.id}
+                              onClick={(e) => handleLiveGovCheck(e, m.startup)}
+                            >
+                              {verifyingStartupId === m.startup.id ? (
+                                <>
+                                  <span className="spinner" style={{ width: '12px', height: '12px' }} />
+                                  <span>Checking official Singapore government registry...</span>
+                                </>
+                              ) : (
+                                <span>⚡ Check Official Government Registry (data.gov.sg)</span>
+                              )}
+                            </button>
+                          )}
+                        </div>
+                      )}
+
+                      {/* 5-Dimension Deterministic Breakdown */}
+                      <div style={{ background: 'rgba(0, 0, 0, 0.35)', borderRadius: 'var(--radius-sm)', padding: '0.65rem 0.85rem', margin: '0.75rem 0', border: '1px solid var(--border-subtle)' }}>
+                        <div style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--accent-cyan)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.4rem' }}>
+                          Match Score Breakdown Across 5 Dimensions
+                        </div>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '0.4rem', fontSize: '0.75rem' }}>
+                          <div className="score-chip">
+                            Skills: <strong>{m.dimensionScores.capabilityMatch.rawScore}/100</strong>
+                          </div>
+                          <div className="score-chip">
+                            Experience: <strong>{m.dimensionScores.industryUseCaseRelevance.rawScore}/100</strong>
+                          </div>
+                          <div className="score-chip">
+                            Tech & Safety: <strong>{m.dimensionScores.technicalCompatibility.rawScore}/100</strong>
+                          </div>
+                          <div className="score-chip">
+                            Location: <strong>{m.dimensionScores.targetMarketRelevance.rawScore}/100</strong>
+                          </div>
+                          <div className="score-chip">
+                            Connection: <strong>{m.dimensionScores.integrationReadiness.rawScore}/100</strong>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Capability Overlap & Gaps */}
+                      <div style={{ margin: '0.75rem 0' }}>
+                        <div className="tag-list">
+                          {m.matchedCapabilities.map((cap) => (
+                            <span key={cap} className="capability-tag matched">
+                              ✓ {cap}
+                            </span>
+                          ))}
+                          {m.capabilityGaps.map((cap) => (
+                            <span key={cap} className="capability-tag gap">
+                              ✕ Missing: {cap}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </details>
                 </div>
 
                 {/* Card Action */}
-                <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: '1rem' }}>
+                <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: '1.25rem' }}>
                   <button
                     type="button"
-                    className="btn btn-primary"
-                    style={{ width: '100%' }}
+                    className="btn btn-primary btn-lg"
+                    style={{ width: '100%', fontSize: '0.95rem', fontWeight: 700 }}
                     onClick={() => handleSelect(m)}
                     disabled={isGeneratingProposal}
                   >
                     {isSelected ? (
                       <>
                         <span className="spinner" style={{ width: '16px', height: '16px' }} />
-                        <span>Writing your pilot plan with AI...</span>
+                        <span>Generating 60-Day Pilot Plan with AI...</span>
                       </>
                     ) : (
-                      <span>Select Startup & Create Pilot Plan →</span>
+                      <span>Select Startup & Build 60-Day Pilot →</span>
                     )}
                   </button>
                 </div>

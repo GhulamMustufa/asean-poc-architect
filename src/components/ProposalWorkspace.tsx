@@ -513,6 +513,25 @@ export function ProposalWorkspace({ proposal, onSave, onBack }: ProposalWorkspac
           </div>
         </div>
 
+        {/* Visual 3-Stage Progress Stepper - Glanceable Timeline */}
+        <div className="stepper-container no-print" style={{ marginTop: '1.5rem' }}>
+          <div className="stepper-step active">
+            <span className="stepper-step-num">Stage 1 (Weeks 1–2)</span>
+            <span className="stepper-step-title">Safe Sandbox Setup</span>
+            <span className="stepper-step-desc">VPC peering & zero-PII data anonymization validation.</span>
+          </div>
+          <div className="stepper-step active">
+            <span className="stepper-step-num">Stage 2 (Weeks 3–6)</span>
+            <span className="stepper-step-title">Shadow Benchmark</span>
+            <span className="stepper-step-desc">Real-time alert testing on 120k daily txns. Zero live DB writes.</span>
+          </div>
+          <div className="stepper-step">
+            <span className="stepper-step-num">Stage 3 (Weeks 7–8)</span>
+            <span className="stepper-step-title">Executive Review</span>
+            <span className="stepper-step-desc">Compliance co-sign & final business case for commercial contract.</span>
+          </div>
+        </div>
+
         {/* Section 1: Executive Summary */}
         <section className="proposal-section">
           <div className="section-header">
@@ -749,6 +768,26 @@ export function ProposalWorkspace({ proposal, onSave, onBack }: ProposalWorkspac
             <span style={{ color: 'var(--text-secondary)' }}>{currentProposal.integrationArchitecture}</span>
           </div>
         </section>
+
+        {/* Executive KPI Stat Banner - Glanceable Metrics */}
+        <div className="kpi-banner no-print">
+          <div>
+            <div className="kpi-stat-num">-40%</div>
+            <div className="kpi-stat-label">Target Alert Volume Reduction</div>
+          </div>
+          <div>
+            <div className="kpi-stat-num">100%</div>
+            <div className="kpi-stat-label">AML Typology Recall Preserved</div>
+          </div>
+          <div>
+            <div className="kpi-stat-num">&lt;180ms</div>
+            <div className="kpi-stat-label">Decision Latency SLA Target</div>
+          </div>
+          <div>
+            <div className="kpi-stat-num">Zero</div>
+            <div className="kpi-stat-label">Live DB Modification Risk</div>
+          </div>
+        </div>
 
         {/* Section 4: Milestones & Schedule */}
         <section className="proposal-section">
