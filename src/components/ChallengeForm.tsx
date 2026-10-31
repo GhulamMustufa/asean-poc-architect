@@ -1,551 +1,373 @@
 'use client';
 
 import React, { useState } from 'react';
-import { ASEANCountry, EnterpriseChallenge, IndustryVertical } from '@/types';
+import { useForm, useWatch, type Resolver } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { AlertTriangle, ArrowRight, BadgeCheck, Loader2, Sparkles } from 'lucide-react';
+import type { EnterpriseChallenge } from '@/types';
+import { CHALLENGE_PRESETS } from '@/data/challengePresets';
+import { getMember } from '@/data/aseanCountries';
+import { checkForDuplicateChallenge, saveChallenge } from '@/lib/store';
+import {
+  CHALLENGE_COUNTRIES,
+  DATA_SENSITIVITIES,
+  DURATION_OPTIONS,
+  EMPTY_CHALLENGE_FORM,
+  INDUSTRIES,
+  challengeFormSchema,
+  presetToFormValues,
+  toEnterpriseChallenge,
+  type ChallengeFormValues,
+} from '@/lib/schemas/challenge';
+import { CountryFlag } from '@/components/CountryFlag';
+import { Button } from '@/components/ui/button';
+import { Input, Textarea } from '@/components/ui/input';
+import { Switch } from '@/components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 
 interface ChallengeFormProps {
   onSubmit: (challenge: EnterpriseChallenge) => void;
   onCancel: () => void;
 }
 
-const PRESET_SCENARIOS: {
-  label: string;
-  isRealWorld?: boolean;
-  sourceNote?: string;
-  data: Omit<EnterpriseChallenge, 'id' | 'createdAt'>;
-}[] = [
-  {
-    label: '🌟 [REAL IMDA OIP] PSA Singapore — Port Turnaround Analytics (SG)',
-    isRealWorld: true,
-    sourceNote: 'IMDA Open Innovation Platform (Singapore)',
-    data: {
-      title: 'Predictive Quay Crane and Vessel Turnaround Analytics',
-      enterpriseName: 'PSA Corporation Limited',
-      industry: 'Logistics & Supply Chain',
-      country: 'SG',
-      problemDescription: 'Container vessels experience unpredictable quay crane waiting times during monsoon peak traffic in the Singapore Strait. Terminal planners require predictive vessel turnaround and berth allocation analytics to optimize crane moves per hour and reduce vessel carbon emissions during berth idle.',
-      desiredOutcome: 'Deploy predictive AIS and crane telemetry models to achieve a 15% reduction in container vessel dwell time and improve berth scheduling accuracy by 25%.',
-      technicalRequirements: [
-        'Port Vessel Turnaround Analytics',
-        'AIS Satellite Vessel Telemetry Ingestion',
-        'Berth Allocation & Quay Crane Scheduling Optimization',
-        'Maritime GHG Emission Tracking (Scope 1 & 2)'
-      ],
-      dataSensitivity: 'Confidential',
-      integrationConstraints: 'Must ingest real-time AIS vessel telemetry and terminal operating system (TOS) EDI messages via secure HTTPS API with local Singapore data residency (AWS ap-southeast-1).',
-      expectedDurationWeeks: 8,
-      budgetRangeUSD: '$40,000 - $75,000 (IMDA OIP Grant Co-funded)',
-      requiresLocalDataResidency: true
-    }
-  },
-  {
-    label: '🌟 [REAL BNM SANDBOX] Maybank — Real-time Mule & Fraud Detection (MY)',
-    isRealWorld: true,
-    sourceNote: 'Bank Negara Malaysia FinTech Sandbox / Maybank Compliance',
-    data: {
-      title: 'AI-Assisted Transaction Fraud Surveillance & AML Alert Triage Sandbox',
-      enterpriseName: 'Malayan Banking Berhad (Maybank)',
-      industry: 'FinTech & Payments',
-      country: 'MY',
-      problemDescription: 'Cross-border digital remittance and instant retail payments generate high volumes of false-positive compliance alerts (exceeding 80%), overwhelming compliance investigators and slowing down legitimate customer payments while sophisticated money mule rings evade static rule engines.',
-      desiredOutcome: 'Implement an explainable machine learning typology detection engine in a shadow production sandbox to reduce false-positive alerts by at least 40% while identifying high-risk mule account clusters within 15 minutes of first transaction.',
-      technicalRequirements: ['Real-time Transaction Monitoring', 'Anti-Money Laundering (AML) Screening', 'Typology Graph Anomaly Scoring', 'Explainable Suspicion Rationale'],
-      dataSensitivity: 'Highly Restricted (PDPA/Banking Secret)',
-      integrationConstraints: 'Read-only Kafka consumer group streaming with mTLS in dedicated VPC; strict adherence to Bank Negara Malaysia (BNM) RMIT guidelines; zero live database modification.',
-      expectedDurationWeeks: 8,
-      budgetRangeUSD: '$50,000 - $90,000',
-      requiresLocalDataResidency: true
-    }
-  },
-  {
-    label: '🌟 [REAL BUMN PILOT] Indofood — Cold-Chain Telematics & e-POD (ID)',
-    isRealWorld: true,
-    sourceNote: 'Indonesia BUMN Supply Chain Forum / HUB.ID Komdigi',
-    data: {
-      title: 'End-to-End Cold-Chain Fleet Telematics & Temperature SLA Tracking',
-      enterpriseName: 'PT Indofood CBP Sukses Makmur',
-      industry: 'Logistics & Supply Chain',
-      country: 'ID',
-      problemDescription: 'Perishable dairy and frozen food shipments across inter-island Java and Sumatra logistics corridors suffer sporadic spoilage due to undetected reefer container compressor failures and unauthorized driver route detours.',
-      desiredOutcome: 'Equip long-haul refrigerated fleets with real-time IoT temperature sensors and automated electronic proof-of-delivery (e-POD) to achieve zero temperature excursion spoilage across pilot transport corridors.',
-      technicalRequirements: ['Real-time GPS / IoT Telematics', 'Cold-Chain Temperature Tracking', 'Proof of Delivery (e-POD)', 'Dynamic Fleet Dispatch'],
-      dataSensitivity: 'Internal',
-      integrationConstraints: 'Integration via REST webhooks into corporate SAP Transport Management module; offline buffering for 12+ hour maritime dead zones.',
-      expectedDurationWeeks: 6,
-      budgetRangeUSD: '$30,000 - $55,000',
-      requiresLocalDataResidency: true
-    }
-  },
-  {
-    label: '🌟 [REAL SUNWAY ILABS] Sunway Group — Smart Estate IoT Sub-metering (MY)',
-    isRealWorld: true,
-    sourceNote: 'Sunway iLabs Corporate Innovation Accelerator',
-    data: {
-      title: 'Smart Estate IoT Sub-metering & Energy Optimization',
-      enterpriseName: 'Sunway Group',
-      industry: 'Industrial IoT & Energy',
-      country: 'MY',
-      problemDescription: 'Commercial properties and retail facilities face rising utility tariffs and manual billing overhead from thousands of tenant electricity and water meters, preventing real-time carbon tracking and ESG compliance reporting.',
-      desiredOutcome: 'Deploy automated IoT digital sub-metering with cloud billing and HVAC chiller plant optimization to achieve 12% energy reduction and automate tenant billing.',
-      technicalRequirements: [
-        'IoT Smart Water & Electricity Meter Telemetry',
-        'Building Automation System (BAS) Integration',
-        'Automated Rental Invoice & Receipt Generation',
-        'Digital Twin Asset Cloud Telemetry'
-      ],
-      dataSensitivity: 'Internal',
-      integrationConstraints: 'Must interface with existing BACnet and Modbus building management controllers and export energy data to Sunway sustainability cloud.',
-      expectedDurationWeeks: 8,
-      budgetRangeUSD: '$35,000 - $65,000',
-      requiresLocalDataResidency: true
-    }
-  },
-  {
-    label: '🏦 Malaysian Commercial Bank (Fictional Demo Benchmark)',
-    isRealWorld: false,
-    sourceNote: 'Synthetic Benchmark Control',
-    data: {
-      title: 'AI-Assisted Transaction Fraud Surveillance & AML Alert Triage Sandbox',
-      enterpriseName: 'Malayan Commercial Bank Berhad (Fictional Demo)',
-      industry: 'FinTech & Payments',
-      country: 'MY',
-      problemDescription: 'High false-positive transaction alert volume (84%) from legacy rule engines is overwhelming compliance investigation teams across Malaysia and regional remittance corridors, driving manual investigation backlogs and delayed alert resolution.',
-      desiredOutcome: 'Deploy explainable ML anomaly scoring in a shadow sandbox to cut manual investigation time by 40% while preserving 100% recall on verified fraud and AML typologies.',
-      technicalRequirements: ['Real-time Transaction Monitoring', 'Anti-Money Laundering (AML) Screening', 'Typology Graph Anomaly Scoring', 'Explainable Suspicion Rationale'],
-      dataSensitivity: 'Highly Restricted (PDPA/Banking Secret)',
-      integrationConstraints: 'Read-only Kafka consumer group streaming with mTLS in dedicated VPC; strict adherence to Bank Negara Malaysia (BNM) RMIT guidelines; zero live database modification.',
-      expectedDurationWeeks: 8,
-      budgetRangeUSD: '$35,000 - $60,000',
-      requiresLocalDataResidency: true
-    }
-  },
-  {
-    label: '🚚 Cold-Chain IoT Visibility (Logistics / ID)',
-    data: {
-      title: 'Inter-Island Maritime Reefer Telematics & Temperature Compliance Monitoring',
-      enterpriseName: 'Nusantara Agro-Cold Logistics',
-      industry: 'Logistics & Supply Chain',
-      country: 'ID',
-      problemDescription: 'Frequent cargo spoilage and missing proof-of-delivery receipts during multi-day roll-on/roll-off ferry crossings between Java and Sulawesi islands.',
-      desiredOutcome: 'Equip 25 refrigerated trucks with offline-buffering cellular IoT temperature trackers to achieve automated exception alerts and digital e-POD verification.',
-      technicalRequirements: ['Real-time GPS / IoT Telematics', 'Cold-Chain Temperature Tracking', 'Proof of Delivery (e-POD)', 'Dynamic Fleet Dispatch'],
-      dataSensitivity: 'Internal',
-      integrationConstraints: 'Integration via REST webhooks into corporate SAP Transport Management module; offline buffering for 12+ hour maritime dead zones.',
-      expectedDurationWeeks: 6,
-      budgetRangeUSD: '$20,000 - $40,000',
-      requiresLocalDataResidency: true
-    }
-  },
-  {
-    label: '📑 Multi-lingual ERP Invoice Extraction (Enterprise AI / MY)',
-    data: {
-      title: 'Automated 3-Way Cross-Border Supplier Invoice Ingestion into Enterprise SAP ERP',
-      enterpriseName: 'Borneo Industrial Conglomerate',
-      industry: 'Enterprise AI & Cybersecurity',
-      country: 'MY',
-      problemDescription: 'Accounts Payable teams spend over 400 hours monthly manually keying multi-currency invoices in Malay, English, and Vietnamese into legacy SAP ERP systems.',
-      desiredOutcome: 'Automate document ingestion with over 98% field extraction accuracy and automated 3-way purchase order reconciliation.',
-      technicalRequirements: ['Multi-lingual OCR (EN, ID, VN, TH)', 'Automated 3-Way Invoice Matching', 'SAP / NetSuite Direct Connectors', 'Tax & GST/VAT Validation'],
-      dataSensitivity: 'Confidential',
-      integrationConstraints: 'Must run in dedicated regional VPC with immutable audit trail lineage for external tax authority compliance.',
-      expectedDurationWeeks: 8,
-      budgetRangeUSD: '$25,000 - $50,000',
-      requiresLocalDataResidency: false
-    }
-  },
-  {
-    label: '🏥 Hospital Insurance Claims Bridge (Healthcare / TH)',
-    data: {
-      title: 'Automated Outpatient Insurance Pre-Authorization & Direct TPA Claims Clearing',
-      enterpriseName: 'Siam Regional Medical Network',
-      industry: 'Healthcare & MedTech',
-      country: 'TH',
-      problemDescription: 'Manual insurance pre-authorization delays patient discharge by up to 3 hours, causing outpatient bed bottlenecks and administrative overhead.',
-      desiredOutcome: 'Bridge Hospital Information System (HIS) with private insurer TPA endpoints for instant electronic eligibility checks and cashless settlement.',
-      technicalRequirements: ['Hospital Information System (HIS) API Bridge', 'Direct Insurance TPA Claims Clearing', 'Electronic Health Record (EHR) Pseudonymization'],
-      dataSensitivity: 'Highly Restricted (PDPA/Banking Secret)',
-      integrationConstraints: 'Strict compliance with Thailand PDPA and HIPAA pseudonymization standards; zero storage of raw patient clinical notes on third-party servers.',
-      expectedDurationWeeks: 10,
-      budgetRangeUSD: '$40,000 - $75,000',
-      requiresLocalDataResidency: true
-    }
-  }
-];
-
-import { checkForDuplicateChallenge, saveChallenge } from '@/lib/store';
-
 export function ChallengeForm({ onSubmit, onCancel }: ChallengeFormProps) {
-  const [formData, setFormData] = useState({
-    title: '',
-    enterpriseName: '',
-    industry: 'FinTech & Payments' as IndustryVertical,
-    country: 'SG' as ASEANCountry,
-    problemDescription: '',
-    desiredOutcome: '',
-    technicalRequirementsText: '',
-    dataSensitivity: 'Confidential' as EnterpriseChallenge['dataSensitivity'],
-    integrationConstraints: '',
-    expectedDurationWeeks: 8,
-    budgetRangeUSD: '$30,000 - $50,000',
-    requiresLocalDataResidency: true
+  const form = useForm<ChallengeFormValues>({
+    resolver: zodResolver(challengeFormSchema) as Resolver<ChallengeFormValues>,
+    defaultValues: EMPTY_CHALLENGE_FORM,
+    mode: 'onTouched',
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [duplicateWarning, setDuplicateWarning] = useState<EnterpriseChallenge | null>(null);
+  const [pendingValues, setPendingValues] = useState<ChallengeFormValues | null>(null);
+  const country = useWatch({ control: form.control, name: 'country' });
 
-  const handleApplyPreset = (preset: typeof PRESET_SCENARIOS[0]) => {
-    setFormData({
-      ...preset.data,
-      technicalRequirementsText: preset.data.technicalRequirements.join(', ')
-    });
-    setDuplicateWarning(null);
-  };
-
-  const processSubmission = () => {
+  const processSubmission = (values: ChallengeFormValues) => {
     setIsSubmitting(true);
-    const technicalRequirements = formData.technicalRequirementsText
-      .split(',')
-      .map((t) => t.trim())
-      .filter((t) => t.length > 0);
-
-    const challenge: EnterpriseChallenge = {
-      id: `chal-${Date.now().toString(36)}`,
-      title: formData.title.trim(),
-      enterpriseName: formData.enterpriseName.trim(),
-      industry: formData.industry,
-      country: formData.country,
-      problemDescription: formData.problemDescription.trim(),
-      desiredOutcome: formData.desiredOutcome.trim(),
-      technicalRequirements: technicalRequirements.length > 0 ? technicalRequirements : ['Core API Integration', 'Data Security Compliance'],
-      dataSensitivity: formData.dataSensitivity,
-      integrationConstraints: formData.integrationConstraints || 'Standard HTTPS REST API with mutual TLS.',
-      expectedDurationWeeks: Number(formData.expectedDurationWeeks) || 8,
-      budgetRangeUSD: formData.budgetRangeUSD,
-      requiresLocalDataResidency: formData.requiresLocalDataResidency,
-      createdAt: new Date().toISOString()
-    };
-
+    const challenge = toEnterpriseChallenge(values);
     // Save challenge to storage for persistence and deal tracking
     saveChallenge(challenge);
-
     setTimeout(() => {
       onSubmit(challenge);
       setIsSubmitting(false);
     }, 350);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    // Check for duplicate challenge submission
+  const handleValid = (values: ChallengeFormValues) => {
     if (!duplicateWarning) {
-      const dupCheck = checkForDuplicateChallenge({
-        enterpriseName: formData.enterpriseName,
-        title: formData.title
-      });
-
+      const dupCheck = checkForDuplicateChallenge({ enterpriseName: values.enterpriseName, title: values.title });
       if (dupCheck.isDuplicate && dupCheck.existingChallenge) {
         setDuplicateWarning(dupCheck.existingChallenge);
+        setPendingValues(values);
         return;
       }
     }
-
-    processSubmission();
+    processSubmission(values);
   };
 
   return (
     <div className="form-card">
-      <div className="form-header">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
-          <div>
-            <h1 style={{ fontSize: '1.75rem', fontWeight: 800 }}>Tell Us About Your Business Problem</h1>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginTop: '0.25rem' }}>
-              Describe what you want to solve so we can match you with the right tech startup.
-            </p>
-          </div>
-          <button type="button" className="btn btn-outline btn-sm" onClick={onCancel}>
-            Cancel
-          </button>
+      <div className="mb-8 flex flex-wrap items-start justify-between gap-3 border-b border-border pb-6">
+        <div>
+          <h1 className="text-[1.75rem] font-bold tracking-tight text-foreground">Tell us about your business problem</h1>
+          <p className="mt-1 text-sm text-text-secondary">Describe what you want to solve so we can match you with the right tech startup.</p>
         </div>
+        <Button type="button" variant="outline" size="sm" onClick={onCancel}>
+          Cancel
+        </Button>
       </div>
 
-      {/* Quick 1-Click Demo Scenarios */}
-      <div className="preset-bar">
-        <span className="preset-title">⚡ Try a Real-World Challenge (Click to Fill):</span>
-        {PRESET_SCENARIOS.map((p, i) => (
-          <button
-            key={i}
-            type="button"
-            className="preset-btn"
-            onClick={() => handleApplyPreset(p)}
-          >
-            {p.label}
-          </button>
-        ))}
-      </div>
+      {/* One-click demo scenarios */}
+      <section aria-labelledby="presets-title" className="mb-8 rounded-2xl border border-border bg-background/40 p-4">
+        <h2 id="presets-title" className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-accent-blue">
+          <Sparkles className="size-3.5" aria-hidden /> Try a real-world challenge
+        </h2>
+        <div className="flex flex-wrap gap-2">
+          {CHALLENGE_PRESETS.map((p) => (
+            <button
+              key={p.label}
+              type="button"
+              onClick={() => {
+                form.reset(presetToFormValues(p.data));
+                setDuplicateWarning(null);
+                setPendingValues(null);
+              }}
+              className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-left text-xs font-medium text-foreground transition-colors duration-200 ease-out hover:border-primary"
+            >
+              {p.isRealWorld && <BadgeCheck className="size-3.5 shrink-0 text-accent-blue" aria-label="Real-world challenge" />}
+              <CountryFlag code={p.data.country} showLabel={false} />
+              {p.label}
+            </button>
+          ))}
+        </div>
+      </section>
 
-      {/* Duplicate Submission Warning */}
+      {/* Duplicate submission warning */}
       {duplicateWarning && (
-        <div style={{ background: 'rgba(var(--rgb-yellow), 0.1)', border: '1px solid rgba(var(--rgb-yellow), 0.35)', borderRadius: 'var(--radius-md)', padding: '1rem', margin: '1rem 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' }}>
+        <div role="alert" className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-asean-yellow/40 bg-asean-yellow/10 p-4">
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
-              <span style={{ color: 'var(--accent-amber)', fontWeight: 800 }}>⚠ A PROJECT WITH THIS NAME ALREADY EXISTS</span>
-            </div>
-            <p style={{ fontSize: '0.825rem', color: 'var(--text-secondary)', margin: 0 }}>
+            <p className="flex items-center gap-2 text-sm font-bold text-accent-amber">
+              <AlertTriangle className="size-4" aria-hidden /> A project with this name already exists
+            </p>
+            <p className="mt-1 text-[0.825rem] text-text-secondary">
               A project for <strong>{duplicateWarning.enterpriseName}</strong> called <em>&ldquo;{duplicateWarning.title}&rdquo;</em> is already saved.
             </p>
           </div>
-          <div style={{ display: 'flex', gap: '0.5rem' }}>
-            <button
-              type="button"
-              className="btn btn-outline btn-sm"
-              onClick={() => setDuplicateWarning(null)}
-            >
-              Edit Form
-            </button>
-            <button
-              type="button"
-              className="btn btn-primary btn-sm"
-              onClick={processSubmission}
-            >
-              Proceed Anyway →
-            </button>
+          <div className="flex gap-2">
+            <Button type="button" variant="outline" size="sm" onClick={() => setDuplicateWarning(null)}>
+              Edit form
+            </Button>
+            <Button type="button" size="sm" onClick={() => pendingValues && processSubmission(pendingValues)}>
+              Proceed anyway <ArrowRight aria-hidden />
+            </Button>
           </div>
         </div>
       )}
 
-      <form onSubmit={handleSubmit}>
-        <div className="form-grid">
-          {/* Challenge Title */}
-          <div className="form-group form-col-full">
-            <label className="form-label" htmlFor="title">
-              <span>Project Title *</span>
-              <span className="form-hint">A short name for what you want to achieve</span>
-            </label>
-            <input
-              id="title"
-              type="text"
-              required
-              minLength={10}
-              placeholder="e.g., Real-time Fraud Detection & Alert Assistant"
-              className="form-input"
-              value={formData.title}
-              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(handleValid)} noValidate>
+          <div className="grid gap-x-5 gap-y-6 md:grid-cols-2">
+            <FormField
+              control={form.control}
+              name="title"
+              render={({ field }) => (
+                <FormItem className="md:col-span-2">
+                  <FormLabel>Project title *</FormLabel>
+                  <FormControl>
+                    <Input placeholder="e.g. Real-time fraud detection & alert assistant" {...field} />
+                  </FormControl>
+                  <FormDescription>A short name for what you want to achieve.</FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-            <div className="form-error-msg">Please enter a project title (at least 10 characters).</div>
-          </div>
 
-          {/* Enterprise Name */}
-          <div className="form-group">
-            <label className="form-label" htmlFor="enterpriseName">
-              <span>Your Company Name *</span>
-            </label>
-            <input
-              id="enterpriseName"
-              type="text"
-              required
-              placeholder="e.g., Maybank Digital Banking"
-              className="form-input"
-              value={formData.enterpriseName}
-              onChange={(e) => setFormData({ ...formData, enterpriseName: e.target.value })}
+            <FormField
+              control={form.control}
+              name="enterpriseName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Your company name *</FormLabel>
+                  <FormControl>
+                    <Input placeholder="e.g. Maybank Digital Banking" autoComplete="organization" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-            <div className="form-error-msg">Company name is required.</div>
-          </div>
 
-          {/* Industry Vertical */}
-          <div className="form-group">
-            <label className="form-label" htmlFor="industry">
-              <span>Your Industry *</span>
-            </label>
-            <select
-              id="industry"
-              className="form-select"
-              value={formData.industry}
-              onChange={(e) => setFormData({ ...formData, industry: e.target.value as IndustryVertical })}
-            >
-              <option value="FinTech & Payments">FinTech & Payments</option>
-              <option value="Logistics & Supply Chain">Logistics & Supply Chain</option>
-              <option value="AgriFood & ClimateTech">AgriFood & ClimateTech</option>
-              <option value="Healthcare & MedTech">Healthcare & MedTech</option>
-              <option value="Retail & E-commerce">Retail & E-commerce</option>
-              <option value="Enterprise AI & Cybersecurity">Enterprise AI & Cybersecurity</option>
-              <option value="Industrial IoT & Energy">Industrial IoT & Energy</option>
-            </select>
-          </div>
-
-          {/* Country */}
-          <div className="form-group">
-            <label className="form-label" htmlFor="country">
-              <span>Country Where This Will Run *</span>
-            </label>
-            <select
-              id="country"
-              className="form-select"
-              value={formData.country}
-              onChange={(e) => setFormData({ ...formData, country: e.target.value as ASEANCountry })}
-            >
-              <option value="SG">🇸🇬 Singapore</option>
-              <option value="ID">🇮🇩 Indonesia</option>
-              <option value="MY">🇲🇾 Malaysia</option>
-              <option value="VN">🇻🇳 Vietnam</option>
-              <option value="TH">🇹🇭 Thailand</option>
-              <option value="PH">🇵🇭 Philippines</option>
-            </select>
-          </div>
-
-          {/* Expected Pilot Duration */}
-          <div className="form-group">
-            <label className="form-label" htmlFor="duration">
-              <span>How Long Should the Pilot Run? *</span>
-              <span className="form-hint">{formData.expectedDurationWeeks} Weeks</span>
-            </label>
-            <select
-              id="duration"
-              className="form-select"
-              value={formData.expectedDurationWeeks}
-              onChange={(e) => setFormData({ ...formData, expectedDurationWeeks: Number(e.target.value) })}
-            >
-              <option value={4}>4 Weeks (Quick Test)</option>
-              <option value={6}>6 Weeks (Standard Trial)</option>
-              <option value={8}>8 Weeks (Full Pilot)</option>
-              <option value={12}>12 Weeks (Extended Pilot)</option>
-            </select>
-          </div>
-
-          {/* Business Problem Description */}
-          <div className="form-group form-col-full">
-            <label className="form-label" htmlFor="problem">
-              <span>What Problem Are You Trying to Solve? *</span>
-              <span className="form-hint">Explain what is slow, manual, or difficult today</span>
-            </label>
-            <textarea
-              id="problem"
-              required
-              minLength={20}
-              placeholder="Describe what is slow, manual, or hard to do today, and why your current tools cannot handle it..."
-              className="form-textarea"
-              value={formData.problemDescription}
-              onChange={(e) => setFormData({ ...formData, problemDescription: e.target.value })}
+            <FormField
+              control={form.control}
+              name="industry"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Your industry *</FormLabel>
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <FormControl>
+                      <SelectTrigger onBlur={field.onBlur}>
+                        <SelectValue />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {INDUSTRIES.map((i) => (
+                        <SelectItem key={i} value={i}>
+                          {i}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-            <div className="form-error-msg">Please provide at least 20 characters describing your problem.</div>
-          </div>
 
-          {/* Desired Outcome */}
-          <div className="form-group form-col-full">
-            <label className="form-label" htmlFor="outcome">
-              <span>What Does Success Look Like? *</span>
-              <span className="form-hint">e.g. Cut review time by 40%, reduce errors, automate paperwork</span>
-            </label>
-            <textarea
-              id="outcome"
-              required
-              minLength={15}
-              placeholder="e.g., Cut alert review time by 40%, catch fraud within 15 minutes, reduce manual work..."
-              className="form-textarea"
-              style={{ minHeight: '80px' }}
-              value={formData.desiredOutcome}
-              onChange={(e) => setFormData({ ...formData, desiredOutcome: e.target.value })}
+            <FormField
+              control={form.control}
+              name="country"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Country where this will run *</FormLabel>
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <FormControl>
+                      <SelectTrigger onBlur={field.onBlur}>
+                        <SelectValue />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {CHALLENGE_COUNTRIES.map((c) => (
+                        <SelectItem key={c} value={c}>
+                          <CountryFlag code={c} showLabel={false} />
+                          {getMember(c)?.name ?? c}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-            <div className="form-error-msg">Please specify what success looks like.</div>
-          </div>
 
-          {/* Technical Requirements */}
-          <div className="form-group form-col-full">
-            <label className="form-label" htmlFor="techReq">
-              <span>Key Technical Features Needed</span>
-              <span className="form-hint">Tags separated by commas (e.g. Fraud Detection, Mobile App, Cloud, GPS Tracking)</span>
-            </label>
-            <input
-              id="techReq"
-              type="text"
-              placeholder="e.g., Transaction Monitoring, Fraud Screening, Explainable AI"
-              className="form-input"
-              value={formData.technicalRequirementsText}
-              onChange={(e) => setFormData({ ...formData, technicalRequirementsText: e.target.value })}
+            <FormField
+              control={form.control}
+              name="expectedDurationWeeks"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>How long should the pilot run? *</FormLabel>
+                  <Select value={String(field.value)} onValueChange={(v) => field.onChange(Number(v))}>
+                    <FormControl>
+                      <SelectTrigger onBlur={field.onBlur}>
+                        <SelectValue />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {DURATION_OPTIONS.map((d) => (
+                        <SelectItem key={d.value} value={String(d.value)}>
+                          {d.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="problemDescription"
+              render={({ field }) => (
+                <FormItem className="md:col-span-2">
+                  <FormLabel>What problem are you trying to solve? *</FormLabel>
+                  <FormControl>
+                    <Textarea placeholder="Describe what is slow, manual, or hard to do today, and why your current tools cannot handle it…" {...field} />
+                  </FormControl>
+                  <FormDescription>Explain what is slow, manual, or difficult today.</FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="desiredOutcome"
+              render={({ field }) => (
+                <FormItem className="md:col-span-2">
+                  <FormLabel>What does success look like? *</FormLabel>
+                  <FormControl>
+                    <Textarea className="min-h-20" placeholder="e.g. Cut alert review time by 40%, catch fraud within 15 minutes…" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="technicalRequirementsText"
+              render={({ field }) => (
+                <FormItem className="md:col-span-2">
+                  <FormLabel>Key technical features needed</FormLabel>
+                  <FormControl>
+                    <Input placeholder="e.g. Transaction monitoring, fraud screening, explainable AI" {...field} />
+                  </FormControl>
+                  <FormDescription>Separate features with commas.</FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="dataSensitivity"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>How confidential is your data?</FormLabel>
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <FormControl>
+                      <SelectTrigger onBlur={field.onBlur}>
+                        <SelectValue />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {DATA_SENSITIVITIES.map((d) => (
+                        <SelectItem key={d.value} value={d.value}>
+                          {d.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="budgetRangeUSD"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Estimated project budget (USD)</FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="integrationConstraints"
+              render={({ field }) => (
+                <FormItem className="md:col-span-2">
+                  <FormLabel>Systems to connect & rules</FormLabel>
+                  <FormControl>
+                    <Input placeholder="e.g. Read-only access to our database; data cannot leave our network" {...field} />
+                  </FormControl>
+                  <FormDescription>For example SAP, cloud storage, or on-premises servers.</FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="requiresLocalDataResidency"
+              render={({ field }) => (
+                <FormItem className="flex-row items-center justify-between gap-4 rounded-2xl border border-border p-4 md:col-span-2">
+                  <div className="flex flex-col gap-1">
+                    <FormLabel>Keep all data in-country</FormLabel>
+                    <FormDescription>
+                      All test data and processing must stay inside {getMember(country)?.name ?? country}.
+                    </FormDescription>
+                  </div>
+                  <FormControl>
+                    <Switch checked={field.value} onCheckedChange={field.onChange} onBlur={field.onBlur} />
+                  </FormControl>
+                </FormItem>
+              )}
             />
           </div>
 
-          {/* Data Sensitivity */}
-          <div className="form-group">
-            <label className="form-label" htmlFor="sensitivity">
-              <span>How Confidential is Your Data?</span>
-            </label>
-            <select
-              id="sensitivity"
-              className="form-select"
-              value={formData.dataSensitivity}
-              onChange={(e) => setFormData({ ...formData, dataSensitivity: e.target.value as any })}
-            >
-              <option value="Public">Public (Open information)</option>
-              <option value="Internal">Internal (Company records)</option>
-              <option value="Confidential">Confidential (Business sensitive)</option>
-              <option value="Highly Restricted (PDPA/Banking Secret)">Highly Sensitive (Customer / Banking data)</option>
-            </select>
+          <div className="mt-10 flex flex-wrap justify-end gap-3 border-t border-border pt-6">
+            <Button type="button" variant="ghost" size="lg" onClick={onCancel} disabled={isSubmitting}>
+              Cancel
+            </Button>
+            <Button type="submit" variant="cta" size="lg" disabled={isSubmitting}>
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="animate-spin motion-reduce:animate-none" aria-hidden /> Finding the best startups…
+                </>
+              ) : (
+                <>
+                  Find matching startups <ArrowRight aria-hidden />
+                </>
+              )}
+            </Button>
           </div>
-
-          {/* Budget Range */}
-          <div className="form-group">
-            <label className="form-label" htmlFor="budget">
-              <span>Estimated Project Budget (USD)</span>
-            </label>
-            <input
-              id="budget"
-              type="text"
-              className="form-input"
-              value={formData.budgetRangeUSD}
-              onChange={(e) => setFormData({ ...formData, budgetRangeUSD: e.target.value })}
-            />
-          </div>
-
-          {/* Integration Constraints */}
-          <div className="form-group form-col-full">
-            <label className="form-label" htmlFor="constraints">
-              <span>Systems to Connect & Rules</span>
-              <span className="form-hint">e.g., Must connect to SAP, cloud storage, or on-premises servers</span>
-            </label>
-            <input
-              id="constraints"
-              type="text"
-              placeholder="e.g., Connect to our database in read-only mode, data cannot leave our secure network"
-              className="form-input"
-              value={formData.integrationConstraints}
-              onChange={(e) => setFormData({ ...formData, integrationConstraints: e.target.value })}
-            />
-          </div>
-
-          {/* Local Data Residency Checkbox */}
-          <div className="form-col-full" style={{ marginTop: '0.5rem' }}>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer' }}>
-              <input
-                type="checkbox"
-                style={{ width: '18px', height: '18px', accentColor: 'var(--accent-cyan)' }}
-                checked={formData.requiresLocalDataResidency}
-                onChange={(e) => setFormData({ ...formData, requiresLocalDataResidency: e.target.checked })}
-              />
-              <span style={{ fontSize: '0.9rem', color: 'var(--text-primary)' }}>
-                <strong>Keep All Data In-Country:</strong> All test data and processing must stay inside ({formData.country}).
-              </span>
-            </label>
-          </div>
-        </div>
-
-        {/* Action Buttons */}
-        <div style={{ marginTop: '2.5rem', display: 'flex', justifyContent: 'flex-end', gap: '1rem', borderTop: '1px solid var(--border-subtle)', paddingTop: '1.5rem' }}>
-          <button type="button" className="btn btn-secondary" onClick={onCancel} disabled={isSubmitting}>
-            Cancel
-          </button>
-          <button type="submit" className="btn btn-primary btn-lg" disabled={isSubmitting}>
-            {isSubmitting ? (
-              <>
-                <span className="spinner" style={{ width: '18px', height: '18px' }} />
-                <span>Finding the best startups for you...</span>
-              </>
-            ) : (
-              <span>Find Matching Startups →</span>
-            )}
-          </button>
-        </div>
-      </form>
+        </form>
+      </Form>
     </div>
   );
 }
