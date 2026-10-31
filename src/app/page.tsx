@@ -11,6 +11,7 @@ import { ChallengeForm } from '@/components/ChallengeForm';
 import { MatchResultsView } from '@/components/MatchResultsView';
 import { ProposalWorkspace } from '@/components/ProposalWorkspace';
 import { StartupsModal } from '@/components/StartupsModal';
+import { Footer } from '@/components/Footer';
 
 export default function Home() {
   const view = useAppStore((s) => s.view);
@@ -134,6 +135,8 @@ export default function Home() {
           />
         )}
       </main>
+
+      <Footer />
 
       <StartupsModal isOpen={directoryOpen} onClose={closeDirectory} />
     </>
