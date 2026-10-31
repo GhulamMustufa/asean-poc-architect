@@ -7,10 +7,13 @@ import { ModelProvider } from '@/lib/ai/types';
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { challenge, startupId, providerPreference } = body as {
+    const { challenge, startupId, providerPreference, preferredModelId, localOnlyMode, simulateFailure } = body as {
       challenge?: EnterpriseChallenge;
       startupId?: string;
       providerPreference?: ModelProvider;
+      preferredModelId?: string;
+      localOnlyMode?: boolean;
+      simulateFailure?: boolean;
     };
 
     if (!challenge || !challenge.title || !challenge.problemDescription) {
@@ -39,12 +42,18 @@ export async function POST(req: NextRequest) {
     // Initialize orchestrator with server-side credentials
     const orchestrator = new ProposalOrchestrator({
       preferredProvider: providerPreference,
-      geminiApiKey: process.env.GEMINI_API_KEY,
-      ollamaHost: process.env.OLLAMA_HOST
+      preferredModelId,
+      localOnlyMode,
+      simulateFailure,
+      geminiApiKey: process.env.GOOGLE_AI_API_KEY || process.env.GEMINI_API_KEY,
+      ollamaHost: process.env.OLLAMA_BASE_URL || process.env.OLLAMA_HOST
     });
 
     const result = await orchestrator.generateProposal(challenge, startup, {
       preferredProvider: providerPreference,
+      preferredModelId,
+      localOnlyMode,
+      simulateFailure,
       timeoutMs: 12000,
       maxRetries: 1
     });

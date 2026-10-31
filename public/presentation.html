@@ -47,6 +47,38 @@
     .slide-canvas {
       aspect-ratio: 16 / 9;
       max-height: 88vh;
+      min-height: 520px;
+    }
+    @media (max-width: 768px) {
+      body {
+        overflow-y: auto !important;
+      }
+      main {
+        padding: 0.75rem !important;
+      }
+      .slide-canvas {
+        aspect-ratio: auto !important;
+        max-height: none !important;
+        min-height: calc(100vh - 120px) !important;
+        height: auto !important;
+        padding: 1.25rem 1rem !important;
+        border-radius: 1rem !important;
+      }
+      .glass-card {
+        padding: 1rem !important;
+      }
+    }
+    @media (max-width: 480px) {
+      main {
+        padding: 0.5rem !important;
+      }
+      .slide-canvas {
+        padding: 1rem 0.75rem !important;
+        border-radius: 0.875rem !important;
+      }
+      .glass-card {
+        padding: 0.85rem !important;
+      }
     }
     .glass-card {
       background: rgba(17, 34, 64, 0.7);
@@ -64,34 +96,86 @@
       background: #233554;
       border-radius: 4px;
     }
+    @media screen {
+      #print-deck-container {
+        display: none !important;
+      }
+    }
+    @media print {
+      @page {
+        size: A4 landscape;
+        margin: 0;
+      }
+      *, *::before, *::after {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+      html, body {
+        margin: 0 !important;
+        padding: 0 !important;
+        background-color: #070D19 !important;
+        overflow: visible !important;
+      }
+      header, main, #speaker-drawer, .no-print {
+        display: none !important;
+      }
+      #print-deck-container {
+        display: block !important;
+      }
+      .print-slide-page {
+        width: 297mm !important;
+        height: 210mm !important;
+        max-width: 297mm !important;
+        max-height: 210mm !important;
+        page-break-after: always !important;
+        page-break-inside: avoid !important;
+        break-after: page !important;
+        break-inside: avoid !important;
+        padding: 16mm 22mm !important;
+        box-sizing: border-box !important;
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: space-between !important;
+        background-color: #0A192F !important;
+        border: none !important;
+        overflow: hidden !important;
+      }
+    }
   </style>
 </head>
 <body class="min-h-screen flex flex-col justify-between overflow-x-hidden antialiased select-none">
 
   <!-- Top Navigation & Controls Bar -->
-  <header class="w-full bg-navy-900/90 border-b border-navy-600 px-6 py-3 flex items-center justify-between sticky top-0 z-50 backdrop-blur-md">
-    <div class="flex items-center gap-3">
-      <div class="w-3 h-3 rounded-full bg-cyan-400"></div>
-      <span class="font-bold tracking-tight text-white text-sm md:text-base">ASEAN POC-Architect</span>
-      <span class="text-xs px-2.5 py-0.5 rounded-full bg-blue-900/60 border border-blue-500/30 text-cyan-400 font-mono hidden sm:inline-block">Clean Pitch Deck</span>
+  <header class="w-full bg-navy-900/90 border-b border-navy-600 px-3 sm:px-6 py-2 sm:py-3 flex items-center justify-between sticky top-0 z-50 backdrop-blur-md">
+    <div class="flex items-center gap-2 sm:gap-3">
+      <div class="w-2.5 h-2.5 rounded-full bg-cyan-400"></div>
+      <a href="/" class="font-bold tracking-tight text-white text-xs sm:text-sm md:text-base hover:text-cyan-400 transition">POC-Architect</a>
+      <span class="text-[10px] px-2 py-0.5 rounded-full bg-blue-900/60 border border-blue-500/30 text-cyan-400 font-mono hidden lg:inline-block">Pitch Deck</span>
     </div>
 
     <!-- Slide Indicators -->
-    <div class="flex items-center gap-1.5 bg-navy-950/80 px-3 py-1.5 rounded-full border border-navy-600" id="slide-indicators">
+    <div class="hidden sm:flex items-center gap-1.5 bg-navy-950/80 px-3 py-1.5 rounded-full border border-navy-600" id="slide-indicators">
       <!-- Generated via JS -->
+    </div>
+    <div class="sm:hidden text-xs font-mono text-cyan-400 font-bold bg-navy-950/80 px-2.5 py-1 rounded-full border border-navy-600">
+      <span id="mobile-slide-num">1</span> / 7
     </div>
 
     <!-- Actions -->
-    <div class="flex items-center gap-2">
-      <button onclick="toggleSpeakerNotes()" id="notes-btn" class="px-3 py-1.5 rounded-lg bg-navy-800 hover:bg-navy-700 border border-navy-600 text-xs font-medium text-slate-300 flex items-center gap-1.5 transition">
+    <div class="flex items-center gap-1.5 sm:gap-2">
+      <button onclick="toggleSpeakerNotes()" id="notes-btn" class="px-2.5 sm:px-3 py-1.5 rounded-lg bg-navy-800 hover:bg-navy-700 border border-navy-600 text-xs font-medium text-slate-300 flex items-center gap-1 transition" title="Speaker Script">
         <i data-lucide="file-text" class="w-3.5 h-3.5 text-cyan-400"></i>
-        <span class="hidden md:inline">Speaker Script</span>
+        <span class="hidden md:inline">Script</span>
       </button>
-      <a href="./ASEAN_POC_Architect_Pitch.pptx" download class="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold flex items-center gap-1.5 transition shadow-lg shadow-blue-500/20">
+      <button onclick="exportToPdf()" class="px-2.5 sm:px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold flex items-center gap-1 transition shadow-lg shadow-emerald-500/20" title="Export all 7 slides as clean PDF">
+        <i data-lucide="printer" class="w-3.5 h-3.5"></i>
+        <span class="hidden sm:inline">PDF</span>
+      </button>
+      <a href="./ASEAN_POC_Architect_Pitch.pptx" download class="px-2 sm:px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold flex items-center gap-1 transition shadow-lg shadow-blue-500/20" title="Download PowerPoint PPTX">
         <i data-lucide="download" class="w-3.5 h-3.5"></i>
-        <span>Download PPTX</span>
+        <span class="hidden sm:inline">PPTX</span>
       </a>
-      <button onclick="toggleFullscreen()" class="p-1.5 rounded-lg bg-navy-800 hover:bg-navy-700 border border-navy-600 text-slate-300 transition" title="Toggle Fullscreen">
+      <button onclick="toggleFullscreen()" class="p-1.5 rounded-lg bg-navy-800 hover:bg-navy-700 border border-navy-600 text-slate-300 transition hidden sm:inline-flex" title="Toggle Fullscreen">
         <i data-lucide="maximize" class="w-4 h-4"></i>
       </button>
     </div>
@@ -115,17 +199,17 @@
       </div>
 
       <!-- Slide Footer Bar -->
-      <div class="pt-4 border-t border-navy-600/60 flex items-center justify-between text-xs text-slate-400">
+      <div class="pt-3 border-t border-navy-600/60 flex items-center justify-between text-xs text-slate-400 mt-4">
         <div class="flex items-center gap-2">
-          <span class="text-slate-400 font-medium">Startup ASEAN • Hacktoberfest KL 2026</span>
+          <span class="text-slate-400 font-medium text-[11px] sm:text-xs">Startup ASEAN • KL 2026</span>
         </div>
-        <div class="flex items-center gap-4">
-          <span class="hidden sm:inline">Use <kbd class="px-1.5 py-0.5 rounded bg-navy-800 border border-navy-600 text-[10px] text-slate-300">←</kbd> <kbd class="px-1.5 py-0.5 rounded bg-navy-800 border border-navy-600 text-[10px] text-slate-300">→</kbd> to navigate</span>
-          <div class="flex items-center gap-1">
-            <button onclick="prevSlide()" class="p-1.5 rounded-md bg-navy-800 hover:bg-navy-700 text-slate-200 border border-navy-600 transition" title="Previous Slide">
+        <div class="flex items-center gap-3">
+          <span class="hidden md:inline text-[11px]">Swipe or use <kbd class="px-1.5 py-0.5 rounded bg-navy-800 border border-navy-600 text-[10px] text-slate-300">←</kbd> <kbd class="px-1.5 py-0.5 rounded bg-navy-800 border border-navy-600 text-[10px] text-slate-300">→</kbd></span>
+          <div class="flex items-center gap-2">
+            <button onclick="prevSlide()" class="p-2 sm:p-1.5 rounded-lg bg-navy-800 hover:bg-navy-700 text-slate-200 border border-navy-600 transition flex items-center justify-center min-w-[36px] min-h-[36px]" title="Previous Slide">
               <i data-lucide="chevron-left" class="w-4 h-4"></i>
             </button>
-            <button onclick="nextSlide()" class="p-1.5 rounded-md bg-navy-800 hover:bg-navy-700 text-slate-200 border border-navy-600 transition" title="Next Slide">
+            <button onclick="nextSlide()" class="p-2 sm:p-1.5 rounded-lg bg-navy-800 hover:bg-navy-700 text-slate-200 border border-navy-600 transition flex items-center justify-center min-w-[36px] min-h-[36px]" title="Next Slide">
               <i data-lucide="chevron-right" class="w-4 h-4"></i>
             </button>
           </div>
@@ -182,33 +266,33 @@
         goal: "Hook the Judges",
         render: () => `
           <div class="flex flex-col justify-center h-full max-w-4xl">
-            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-950/80 border border-blue-500/40 text-cyan-400 text-xs font-mono font-semibold w-max mb-6">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-950/80 border border-blue-500/40 text-cyan-400 text-xs font-mono font-semibold w-max mb-3 sm:mb-6">
               STARTUP ASEAN • 2026
             </div>
             
-            <h1 class="text-5xl md:text-6xl lg:text-7xl font-extrabold text-white tracking-tight mb-4">
+            <h1 class="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold text-white tracking-tight mb-2 sm:mb-4">
               ASEAN <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-cyan-300 to-sky-200">POC-Architect</span>
             </h1>
             
-            <p class="text-2xl md:text-3xl text-cyan-400 font-semibold mb-10">
+            <p class="text-base sm:text-2xl md:text-3xl text-cyan-400 font-semibold mb-6 sm:mb-10">
               From business connections to real pilot projects.
             </p>
 
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
-              <div class="glass-card p-6 rounded-2xl">
-                <span class="text-blue-400 font-mono text-sm font-bold block mb-2">01 / MATCH</span>
-                <h3 class="text-white font-bold text-lg mb-1">Find the Right Fit</h3>
-                <p class="text-slate-300 text-sm">Connect enterprise problems to suitable startups.</p>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-5">
+              <div class="glass-card p-4 sm:p-6 rounded-2xl">
+                <span class="text-blue-400 font-mono text-xs sm:text-sm font-bold block mb-1.5 sm:mb-2">01 / MATCH</span>
+                <h3 class="text-white font-bold text-base sm:text-lg mb-1">Find the Right Fit</h3>
+                <p class="text-slate-300 text-xs sm:text-sm">Connect enterprise problems to suitable startups.</p>
               </div>
-              <div class="glass-card p-6 rounded-2xl">
-                <span class="text-cyan-400 font-mono text-sm font-bold block mb-2">02 / PLAN</span>
-                <h3 class="text-white font-bold text-lg mb-1">60-Day Trial Plan</h3>
-                <p class="text-slate-300 text-sm">Build a practical step-by-step roadmap in seconds.</p>
+              <div class="glass-card p-4 sm:p-6 rounded-2xl">
+                <span class="text-cyan-400 font-mono text-xs sm:text-sm font-bold block mb-1.5 sm:mb-2">02 / PLAN</span>
+                <h3 class="text-white font-bold text-base sm:text-lg mb-1">60-Day Trial Plan</h3>
+                <p class="text-slate-300 text-xs sm:text-sm">Build a practical step-by-step roadmap in seconds.</p>
               </div>
-              <div class="glass-card p-6 rounded-2xl">
-                <span class="text-emerald-400 font-mono text-sm font-bold block mb-2">03 / REVIEW</span>
-                <h3 class="text-white font-bold text-lg mb-1">Ready for Sign-Off</h3>
-                <p class="text-slate-300 text-sm">Generate a clear agreement for human approval.</p>
+              <div class="glass-card p-4 sm:p-6 rounded-2xl">
+                <span class="text-emerald-400 font-mono text-xs sm:text-sm font-bold block mb-1.5 sm:mb-2">03 / REVIEW</span>
+                <h3 class="text-white font-bold text-base sm:text-lg mb-1">Ready for Sign-Off</h3>
+                <p class="text-slate-300 text-xs sm:text-sm">Generate a clear agreement for human approval.</p>
               </div>
             </div>
           </div>
@@ -231,41 +315,41 @@
         goal: "The 3 Real Friction Points",
         render: () => `
           <div class="flex flex-col justify-center h-full">
-            <div class="mb-8">
-              <h2 class="text-3xl md:text-5xl font-extrabold text-white tracking-tight mb-2">
+            <div class="mb-4 sm:mb-8">
+              <h2 class="text-2xl sm:text-3xl md:text-5xl font-extrabold text-white tracking-tight mb-1 sm:mb-2">
                 Good connections. <span class="text-cyan-400">No action.</span>
               </h2>
-              <p class="text-slate-300 text-base md:text-lg">
+              <p class="text-slate-300 text-sm sm:text-base md:text-lg">
                 Summits create handshakes. Not business contracts.
               </p>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div class="glass-card p-6 rounded-2xl flex flex-col justify-between">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-6">
+              <div class="glass-card p-4 sm:p-6 rounded-2xl flex flex-col justify-between">
                 <div>
-                  <span class="text-xs font-mono font-bold text-blue-400 uppercase tracking-wider block mb-2">For Enterprises</span>
-                  <h3 class="text-xl font-bold text-white mb-3">Hard to find the right startup</h3>
-                  <p class="text-slate-300 text-sm leading-relaxed">
+                  <span class="text-[10px] sm:text-xs font-mono font-bold text-blue-400 uppercase tracking-wider block mb-1.5 sm:mb-2">For Enterprises</span>
+                  <h3 class="text-base sm:text-xl font-bold text-white mb-1.5 sm:mb-3">Hard to find the right startup</h3>
+                  <p class="text-slate-300 text-xs sm:text-sm leading-relaxed">
                     Scattered across 10 countries. Marketing hype hides whether they can actually plug into corporate systems.
                   </p>
                 </div>
               </div>
 
-              <div class="glass-card p-6 rounded-2xl flex flex-col justify-between">
+              <div class="glass-card p-4 sm:p-6 rounded-2xl flex flex-col justify-between">
                 <div>
-                  <span class="text-xs font-mono font-bold text-cyan-400 uppercase tracking-wider block mb-2">For Startups</span>
-                  <h3 class="text-xl font-bold text-white mb-3">Hard to reach decision-makers</h3>
-                  <p class="text-slate-300 text-sm leading-relaxed">
+                  <span class="text-[10px] sm:text-xs font-mono font-bold text-cyan-400 uppercase tracking-wider block mb-1.5 sm:mb-2">For Startups</span>
+                  <h3 class="text-base sm:text-xl font-bold text-white mb-1.5 sm:mb-3">Hard to reach decision-makers</h3>
+                  <p class="text-slate-300 text-xs sm:text-sm leading-relaxed">
                     Endless friendly coffee chats with teams who don't have the budget or authority to start a project.
                   </p>
                 </div>
               </div>
 
-              <div class="glass-card p-6 rounded-2xl flex flex-col justify-between">
+              <div class="glass-card p-4 sm:p-6 rounded-2xl flex flex-col justify-between">
                 <div>
-                  <span class="text-xs font-mono font-bold text-emerald-400 uppercase tracking-wider block mb-2">For Both Sides</span>
-                  <h3 class="text-xl font-bold text-white mb-3">Trial setup takes 3 months</h3>
-                  <p class="text-slate-300 text-sm leading-relaxed">
+                  <span class="text-[10px] sm:text-xs font-mono font-bold text-emerald-400 uppercase tracking-wider block mb-1.5 sm:mb-2">For Both Sides</span>
+                  <h3 class="text-base sm:text-xl font-bold text-white mb-1.5 sm:mb-3">Trial setup takes 3 months</h3>
+                  <p class="text-slate-300 text-xs sm:text-sm leading-relaxed">
                     Slow meetings debating tasks, security rules, and success goals. By month three, momentum is dead.
                   </p>
                 </div>
@@ -292,49 +376,49 @@
         goal: "Sourced Numbers & Scale",
         render: () => `
           <div class="flex flex-col justify-center h-full">
-            <div class="mb-8">
-              <h2 class="text-3xl md:text-5xl font-extrabold text-white tracking-tight mb-2">
+            <div class="mb-4 sm:mb-8">
+              <h2 class="text-2xl sm:text-3xl md:text-5xl font-extrabold text-white tracking-tight mb-1 sm:mb-2">
                 ASEAN has opportunities. <span class="text-cyan-400">Turning them into deals is the challenge.</span>
               </h2>
-              <p class="text-slate-300 text-base md:text-lg">
+              <p class="text-slate-300 text-sm sm:text-base md:text-lg">
                 The startups and money are here. We need the bridge to close real trials.
               </p>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-              <div class="glass-card p-8 rounded-2xl flex flex-col justify-between">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-6 mb-4 sm:mb-8">
+              <div class="glass-card p-5 sm:p-8 rounded-2xl flex flex-col justify-between">
                 <div>
-                  <div class="text-6xl md:text-7xl font-black text-cyan-400 font-mono tracking-tight mb-3">
+                  <div class="text-4xl sm:text-6xl md:text-7xl font-black text-cyan-400 font-mono tracking-tight mb-2 sm:mb-3">
                     4,000+
                   </div>
-                  <h3 class="text-2xl font-bold text-white mb-2">Startups in ASEAN</h3>
-                  <p class="text-slate-300 text-sm leading-relaxed">
+                  <h3 class="text-xl sm:text-2xl font-bold text-white mb-1.5 sm:mb-2">Startups in ASEAN</h3>
+                  <p class="text-slate-300 text-xs sm:text-sm leading-relaxed">
                     Huge pool of talent ready to partner with regional enterprises.
                   </p>
                 </div>
-                <div class="pt-4 mt-4 border-t border-navy-600 text-xs text-slate-400 italic">
+                <div class="pt-3 mt-3 sm:pt-4 sm:mt-4 border-t border-navy-600 text-[11px] sm:text-xs text-slate-400 italic">
                   Source: Startup ASEAN Launch Briefing, June 2025
                 </div>
               </div>
 
-              <div class="glass-card p-8 rounded-2xl flex flex-col justify-between">
+              <div class="glass-card p-5 sm:p-8 rounded-2xl flex flex-col justify-between">
                 <div>
-                  <div class="text-6xl md:text-7xl font-black text-blue-400 font-mono tracking-tight mb-3">
+                  <div class="text-4xl sm:text-6xl md:text-7xl font-black text-blue-400 font-mono tracking-tight mb-2 sm:mb-3">
                     US$226B
                   </div>
-                  <h3 class="text-2xl font-bold text-white mb-2">Foreign Investment (2024)</h3>
-                  <p class="text-slate-300 text-sm leading-relaxed">
+                  <h3 class="text-xl sm:text-2xl font-bold text-white mb-1.5 sm:mb-2">Foreign Investment (2024)</h3>
+                  <p class="text-slate-300 text-xs sm:text-sm leading-relaxed">
                     Strong regional funding and corporate demand for digital solutions.
                   </p>
                 </div>
-                <div class="pt-4 mt-4 border-t border-navy-600 text-xs text-slate-400 italic">
+                <div class="pt-3 mt-3 sm:pt-4 sm:mt-4 border-t border-navy-600 text-[11px] sm:text-xs text-slate-400 italic">
                   Source: ASEAN Secretariat & UNCTAD, ASEAN Investment Report 2024
                 </div>
               </div>
             </div>
 
-            <div class="p-4 rounded-xl bg-navy-800 border border-navy-600 text-center">
-              <p class="text-sm md:text-base text-slate-200">
+            <div class="p-3 sm:p-4 rounded-xl bg-navy-800 border border-navy-600 text-center">
+              <p class="text-xs sm:text-sm md:text-base text-slate-200">
                 These numbers prove the opportunity is massive. What we need is a practical tool to turn handshakes into pilots.
               </p>
             </div>
@@ -357,51 +441,51 @@
         goal: "4 Clean Steps",
         render: () => `
           <div class="flex flex-col justify-center h-full">
-            <div class="mb-8">
-              <h2 class="text-3xl md:text-5xl font-extrabold text-white tracking-tight mb-2">
+            <div class="mb-4 sm:mb-8">
+              <h2 class="text-2xl sm:text-3xl md:text-5xl font-extrabold text-white tracking-tight mb-1 sm:mb-2">
                 Meet <span class="text-cyan-400">ASEAN POC-Architect.</span>
               </h2>
-              <p class="text-slate-300 text-base md:text-lg">
+              <p class="text-slate-300 text-sm sm:text-base md:text-lg">
                 4 simple steps from business problem to signed pilot:
               </p>
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-              <div class="glass-card p-6 rounded-2xl flex flex-col justify-between">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
+              <div class="glass-card p-4 sm:p-6 rounded-2xl flex flex-col justify-between">
                 <div>
-                  <span class="w-8 h-8 rounded-lg bg-blue-600 text-white font-mono font-bold text-sm flex items-center justify-center mb-4">1</span>
-                  <h3 class="text-xl font-bold text-white mb-2">Understand</h3>
-                  <p class="text-slate-300 text-sm leading-relaxed">
+                  <span class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-blue-600 text-white font-mono font-bold text-xs sm:text-sm flex items-center justify-center mb-3 sm:mb-4">1</span>
+                  <h3 class="text-base sm:text-xl font-bold text-white mb-1.5 sm:mb-2">Understand</h3>
+                  <p class="text-slate-300 text-xs sm:text-sm leading-relaxed">
                     Reads the business problem, tech needs, and security rules.
                   </p>
                 </div>
               </div>
 
-              <div class="glass-card p-6 rounded-2xl flex flex-col justify-between">
+              <div class="glass-card p-4 sm:p-6 rounded-2xl flex flex-col justify-between">
                 <div>
-                  <span class="w-8 h-8 rounded-lg bg-cyan-600 text-white font-mono font-bold text-sm flex items-center justify-center mb-4">2</span>
-                  <h3 class="text-xl font-bold text-white mb-2">Match</h3>
-                  <p class="text-slate-300 text-sm leading-relaxed">
+                  <span class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-cyan-600 text-white font-mono font-bold text-xs sm:text-sm flex items-center justify-center mb-3 sm:mb-4">2</span>
+                  <h3 class="text-base sm:text-xl font-bold text-white mb-1.5 sm:mb-2">Match</h3>
+                  <p class="text-slate-300 text-xs sm:text-sm leading-relaxed">
                     Scores startups fairly on skills, tech fit, and readiness.
                   </p>
                 </div>
               </div>
 
-              <div class="glass-card p-6 rounded-2xl flex flex-col justify-between">
+              <div class="glass-card p-4 sm:p-6 rounded-2xl flex flex-col justify-between">
                 <div>
-                  <span class="w-8 h-8 rounded-lg bg-blue-600 text-white font-mono font-bold text-sm flex items-center justify-center mb-4">3</span>
-                  <h3 class="text-xl font-bold text-white mb-2">Plan</h3>
-                  <p class="text-slate-300 text-sm leading-relaxed">
+                  <span class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-blue-600 text-white font-mono font-bold text-xs sm:text-sm flex items-center justify-center mb-3 sm:mb-4">3</span>
+                  <h3 class="text-base sm:text-xl font-bold text-white mb-1.5 sm:mb-2">Plan</h3>
+                  <p class="text-slate-300 text-xs sm:text-sm leading-relaxed">
                     Builds a practical 60-day trial plan with clear milestones.
                   </p>
                 </div>
               </div>
 
-              <div class="glass-card p-6 rounded-2xl flex flex-col justify-between">
+              <div class="glass-card p-4 sm:p-6 rounded-2xl flex flex-col justify-between">
                 <div>
-                  <span class="w-8 h-8 rounded-lg bg-emerald-600 text-white font-mono font-bold text-sm flex items-center justify-center mb-4">4</span>
-                  <h3 class="text-xl font-bold text-white mb-2">Review</h3>
-                  <p class="text-slate-300 text-sm leading-relaxed">
+                  <span class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-emerald-600 text-white font-mono font-bold text-xs sm:text-sm flex items-center justify-center mb-3 sm:mb-4">4</span>
+                  <h3 class="text-base sm:text-xl font-bold text-white mb-1.5 sm:mb-2">Review</h3>
+                  <p class="text-slate-300 text-xs sm:text-sm leading-relaxed">
                     Produces an exportable proposal ready for human sign-off.
                   </p>
                 </div>
@@ -429,73 +513,73 @@
         goal: "The Bank Case Study",
         render: () => `
           <div class="flex flex-col justify-center h-full">
-            <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center justify-between mb-3 sm:mb-4">
               <div>
-                <h2 class="text-2xl md:text-4xl font-extrabold text-white tracking-tight">
+                <h2 class="text-xl sm:text-2xl md:text-4xl font-extrabold text-white tracking-tight">
                   From challenge to pilot in minutes.
                 </h2>
-                <p class="text-slate-400 text-sm">
+                <p class="text-slate-400 text-xs sm:text-sm">
                   Example: <strong>Malayan Commercial Bank Berhad</strong> (Demonstration Data)
                 </p>
               </div>
-              <span class="text-xs font-mono px-3 py-1 rounded-full bg-blue-900/60 border border-blue-500/30 text-cyan-400">
+              <span class="text-[10px] sm:text-xs font-mono px-2.5 sm:px-3 py-1 rounded-full bg-blue-900/60 border border-blue-500/30 text-cyan-400">
                 Live Scenario
               </span>
             </div>
 
-            <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 text-left">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-3 sm:gap-5 text-left">
               <!-- Left Column: Challenge & Matches (Col 5) -->
-              <div class="lg:col-span-5 space-y-4">
-                <div class="glass-card p-5 rounded-2xl border-l-4 border-l-blue-500">
-                  <span class="text-xs font-mono text-blue-400 font-bold uppercase block mb-1">The Problem</span>
-                  <h4 class="text-base font-bold text-white mb-1">Fraud Detection Challenge</h4>
+              <div class="lg:col-span-5 space-y-3 sm:space-y-4">
+                <div class="glass-card p-4 sm:p-5 rounded-2xl border-l-4 border-l-blue-500">
+                  <span class="text-[10px] sm:text-xs font-mono text-blue-400 font-bold uppercase block mb-1">The Problem</span>
+                  <h4 class="text-sm sm:text-base font-bold text-white mb-1">Fraud Detection Challenge</h4>
                   <p class="text-xs text-slate-300 leading-relaxed">
                     Bank has <strong>84% false alarms</strong> under old rules. Needs faster checks without touching live customer accounts.
                   </p>
                 </div>
 
-                <div class="glass-card p-4 rounded-2xl space-y-2">
-                  <span class="text-xs font-mono font-bold text-slate-400 uppercase block mb-2 px-1">Startup Candidates</span>
+                <div class="glass-card p-3 sm:p-4 rounded-2xl space-y-2">
+                  <span class="text-[10px] sm:text-xs font-mono font-bold text-slate-400 uppercase block mb-2 px-1">Startup Candidates</span>
 
-                  <div class="p-3 rounded-xl bg-emerald-950/40 border border-emerald-500/50 flex items-center justify-between">
+                  <div class="p-2.5 sm:p-3 rounded-xl bg-emerald-950/40 border border-emerald-500/50 flex items-center justify-between">
                     <div>
                       <div class="flex items-center gap-2">
-                        <span class="text-sm font-bold text-white">SentriShield AI</span>
+                        <span class="text-xs sm:text-sm font-bold text-white">SentriShield AI</span>
                         <span class="text-[10px] px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-mono">SELECTED</span>
                       </div>
-                      <span class="text-xs text-slate-300">Fast streaming • Bank-ready</span>
+                      <span class="text-[11px] sm:text-xs text-slate-300">Fast streaming • Bank-ready</span>
                     </div>
-                    <span class="text-lg font-bold text-emerald-400 font-mono">94%</span>
+                    <span class="text-base sm:text-lg font-bold text-emerald-400 font-mono">94%</span>
                   </div>
 
-                  <div class="p-3 rounded-xl bg-navy-800/80 border border-navy-600 flex items-center justify-between opacity-80">
+                  <div class="p-2.5 sm:p-3 rounded-xl bg-navy-800/80 border border-navy-600 flex items-center justify-between opacity-80">
                     <div>
-                      <span class="text-sm font-bold text-white">Tookitaki FinSights</span>
-                      <span class="text-xs text-slate-400 block">Strong rules network</span>
+                      <span class="text-xs sm:text-sm font-bold text-white">Tookitaki FinSights</span>
+                      <span class="text-[11px] sm:text-xs text-slate-400 block">Strong rules network</span>
                     </div>
-                    <span class="text-lg font-bold text-blue-400 font-mono">89%</span>
+                    <span class="text-base sm:text-lg font-bold text-blue-400 font-mono">89%</span>
                   </div>
 
-                  <div class="p-3 rounded-xl bg-navy-800/50 border border-navy-600 flex items-center justify-between opacity-60">
+                  <div class="p-2.5 sm:p-3 rounded-xl bg-navy-800/50 border border-navy-600 flex items-center justify-between opacity-60">
                     <div>
-                      <span class="text-sm font-bold text-white">Cynopsis Solutions</span>
-                      <span class="text-xs text-slate-400 block">Missing real-time alerts</span>
+                      <span class="text-xs sm:text-sm font-bold text-white">Cynopsis Solutions</span>
+                      <span class="text-[11px] sm:text-xs text-slate-400 block">Missing real-time alerts</span>
                     </div>
-                    <span class="text-lg font-bold text-slate-400 font-mono">78%</span>
+                    <span class="text-base sm:text-lg font-bold text-slate-400 font-mono">78%</span>
                   </div>
                 </div>
               </div>
 
               <!-- Right Column: 60-Day Pilot (Col 7) -->
-              <div class="lg:col-span-7 glass-card p-5 rounded-2xl flex flex-col justify-between">
+              <div class="lg:col-span-7 glass-card p-4 sm:p-5 rounded-2xl flex flex-col justify-between">
                 <div>
-                  <div class="flex items-center justify-between pb-3 mb-4 border-b border-navy-600">
-                    <span class="text-sm font-bold text-white font-mono">GENERATED 60-DAY PILOT PLAN</span>
-                    <span class="text-xs text-slate-400 font-mono">Duration: 8 Weeks</span>
+                  <div class="flex items-center justify-between pb-2 sm:pb-3 mb-3 sm:mb-4 border-b border-navy-600">
+                    <span class="text-xs sm:text-sm font-bold text-white font-mono">GENERATED 60-DAY PILOT PLAN</span>
+                    <span class="text-[11px] sm:text-xs text-slate-400 font-mono">Duration: 8 Weeks</span>
                   </div>
 
-                  <div class="space-y-3 mb-4">
-                    <div class="p-3 rounded-xl bg-navy-800/80 border border-navy-600">
+                  <div class="space-y-2 sm:space-y-3 mb-3 sm:mb-4">
+                    <div class="p-2.5 sm:p-3 rounded-xl bg-navy-800/80 border border-navy-600">
                       <div class="flex justify-between font-bold text-cyan-400 text-xs mb-1">
                         <span>Weeks 1–2: Safe Setup</span>
                         <span class="font-mono text-[10px]">Gate 1</span>
@@ -503,7 +587,7 @@
                       <p class="text-slate-300 text-xs">Setup test environment. Zero real customer data touched.</p>
                     </div>
 
-                    <div class="p-3 rounded-xl bg-navy-800/80 border border-navy-600">
+                    <div class="p-2.5 sm:p-3 rounded-xl bg-navy-800/80 border border-navy-600">
                       <div class="flex justify-between font-bold text-blue-400 text-xs mb-1">
                         <span>Weeks 3–6: Speed & Accuracy Test</span>
                         <span class="font-mono text-[10px]">Gate 2</span>
@@ -511,7 +595,7 @@
                       <p class="text-slate-300 text-xs">Run real-time fraud alerts in shadow mode. No live banking changes.</p>
                     </div>
 
-                    <div class="p-3 rounded-xl bg-navy-800/80 border border-navy-600">
+                    <div class="p-2.5 sm:p-3 rounded-xl bg-navy-800/80 border border-navy-600">
                       <div class="flex justify-between font-bold text-emerald-400 text-xs mb-1">
                         <span>Weeks 7–8: Management Review</span>
                         <span class="font-mono text-[10px]">Gate 3</span>
@@ -521,9 +605,9 @@
                   </div>
                 </div>
 
-                <div class="p-3 rounded-xl bg-navy-950 border border-blue-500/30 flex items-center justify-between">
-                  <span class="text-xs text-cyan-400 font-mono uppercase font-bold">Pilot Goal</span>
-                  <span class="text-white font-semibold text-xs">Cut false alarms by 40% with zero risk to live banking</span>
+                <div class="p-2.5 sm:p-3 rounded-xl bg-navy-950 border border-blue-500/30 flex items-center justify-between">
+                  <span class="text-[10px] sm:text-xs text-cyan-400 font-mono uppercase font-bold">Pilot Goal</span>
+                  <span class="text-white font-semibold text-xs text-right">Cut false alarms by 40% safely</span>
                 </div>
               </div>
             </div>
@@ -548,58 +632,58 @@
         goal: "Why We Are More Than A Wrapper",
         render: () => `
           <div class="flex flex-col justify-center h-full">
-            <div class="mb-8">
-              <h2 class="text-3xl md:text-5xl font-extrabold text-white tracking-tight mb-2">
+            <div class="mb-4 sm:mb-8">
+              <h2 class="text-2xl sm:text-3xl md:text-5xl font-extrabold text-white tracking-tight mb-1 sm:mb-2">
                 More than a chatbot. <span class="text-cyan-400">More than a database.</span>
               </h2>
-              <p class="text-slate-300 text-base md:text-lg">
+              <p class="text-slate-300 text-sm sm:text-base md:text-lg">
                 Why simple chatbots fail at enterprise deals:
               </p>
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
-              <div class="glass-card p-6 rounded-2xl flex flex-col justify-between">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5 mb-4 sm:mb-8">
+              <div class="glass-card p-4 sm:p-6 rounded-2xl flex flex-col justify-between">
                 <div>
-                  <h3 class="text-xl font-bold text-white mb-2">Understand</h3>
-                  <p class="text-slate-300 text-sm leading-relaxed">
+                  <h3 class="text-base sm:text-xl font-bold text-white mb-1.5 sm:mb-2">Understand</h3>
+                  <p class="text-slate-300 text-xs sm:text-sm leading-relaxed">
                     Pulls exact business requirements from plain English.
                   </p>
                 </div>
               </div>
 
-              <div class="glass-card p-6 rounded-2xl flex flex-col justify-between">
+              <div class="glass-card p-4 sm:p-6 rounded-2xl flex flex-col justify-between">
                 <div>
-                  <h3 class="text-xl font-bold text-white mb-2">Match</h3>
-                  <p class="text-slate-300 text-sm leading-relaxed">
+                  <h3 class="text-base sm:text-xl font-bold text-white mb-1.5 sm:mb-2">Match</h3>
+                  <p class="text-slate-300 text-xs sm:text-sm leading-relaxed">
                     Fair, transparent scoring — zero black-box guessing.
                   </p>
                 </div>
               </div>
 
-              <div class="glass-card p-6 rounded-2xl flex flex-col justify-between">
+              <div class="glass-card p-4 sm:p-6 rounded-2xl flex flex-col justify-between">
                 <div>
-                  <h3 class="text-xl font-bold text-white mb-2">Plan</h3>
-                  <p class="text-slate-300 text-sm leading-relaxed">
+                  <h3 class="text-base sm:text-xl font-bold text-white mb-1.5 sm:mb-2">Plan</h3>
+                  <p class="text-slate-300 text-xs sm:text-sm leading-relaxed">
                     Builds realistic timelines, deliverables, and tasks.
                   </p>
                 </div>
               </div>
 
-              <div class="glass-card p-6 rounded-2xl flex flex-col justify-between">
+              <div class="glass-card p-4 sm:p-6 rounded-2xl flex flex-col justify-between">
                 <div>
-                  <h3 class="text-xl font-bold text-white mb-2">Check</h3>
-                  <p class="text-slate-300 text-sm leading-relaxed">
+                  <h3 class="text-base sm:text-xl font-bold text-white mb-1.5 sm:mb-2">Check</h3>
+                  <p class="text-slate-300 text-xs sm:text-sm leading-relaxed">
                     Catches missing data, security rules, and risks.
                   </p>
                 </div>
               </div>
             </div>
 
-            <div class="p-4 rounded-xl bg-navy-800 border border-navy-600 flex items-center justify-between">
-              <span class="text-sm text-slate-200">
+            <div class="p-3 sm:p-4 rounded-xl bg-navy-800 border border-navy-600 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+              <span class="text-xs sm:text-sm text-slate-200">
                 <strong>Flexible AI:</strong> Runs fast in the cloud with Gemma 4, or 100% offline on a laptop for complete bank privacy.
               </span>
-              <span class="text-xs font-mono text-cyan-400 px-3 py-1 rounded bg-navy-950 border border-navy-600">
+              <span class="text-[10px] sm:text-xs font-mono text-cyan-400 px-2.5 sm:px-3 py-1 rounded bg-navy-950 border border-navy-600 self-start sm:self-auto">
                 Cloud + Offline Edge
               </span>
             </div>
@@ -623,53 +707,53 @@
         goal: "The Final Slogan",
         render: () => `
           <div class="flex flex-col justify-center h-full">
-            <div class="mb-8">
-              <h2 class="text-3xl md:text-5xl font-extrabold text-white tracking-tight mb-2">
+            <div class="mb-4 sm:mb-8">
+              <h2 class="text-2xl sm:text-3xl md:text-5xl font-extrabold text-white tracking-tight mb-1 sm:mb-2">
                 Make every connection count.
               </h2>
-              <p class="text-slate-300 text-base md:text-lg">
+              <p class="text-slate-300 text-sm sm:text-base md:text-lg">
                 Turning summit handshakes into measurable economic outcomes:
               </p>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-              <div class="glass-card p-6 rounded-2xl flex flex-col justify-between">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-6 mb-4 sm:mb-8">
+              <div class="glass-card p-4 sm:p-6 rounded-2xl flex flex-col justify-between">
                 <div>
-                  <span class="text-xs font-mono font-bold text-blue-400 uppercase tracking-wider block mb-2">For Enterprises</span>
-                  <h3 class="text-xl font-bold text-white mb-2">Fast, Safe Pilots</h3>
-                  <p class="text-slate-300 text-sm leading-relaxed">
+                  <span class="text-[10px] sm:text-xs font-mono font-bold text-blue-400 uppercase tracking-wider block mb-1.5 sm:mb-2">For Enterprises</span>
+                  <h3 class="text-base sm:text-xl font-bold text-white mb-1.5 sm:mb-2">Fast, Safe Pilots</h3>
+                  <p class="text-slate-300 text-xs sm:text-sm leading-relaxed">
                     Test startups in weeks, not months, with clear safety guardrails.
                   </p>
                 </div>
               </div>
 
-              <div class="glass-card p-6 rounded-2xl flex flex-col justify-between">
+              <div class="glass-card p-4 sm:p-6 rounded-2xl flex flex-col justify-between">
                 <div>
-                  <span class="text-xs font-mono font-bold text-cyan-400 uppercase tracking-wider block mb-2">For Startups</span>
-                  <h3 class="text-xl font-bold text-white mb-2">Direct Corporate Access</h3>
-                  <p class="text-slate-300 text-sm leading-relaxed">
+                  <span class="text-[10px] sm:text-xs font-mono font-bold text-cyan-400 uppercase tracking-wider block mb-1.5 sm:mb-2">For Startups</span>
+                  <h3 class="text-base sm:text-xl font-bold text-white mb-1.5 sm:mb-2">Direct Corporate Access</h3>
+                  <p class="text-slate-300 text-xs sm:text-sm leading-relaxed">
                     Skip the endless pitch meetings and get straight to real trials.
                   </p>
                 </div>
               </div>
 
-              <div class="glass-card p-6 rounded-2xl flex flex-col justify-between">
+              <div class="glass-card p-4 sm:p-6 rounded-2xl flex flex-col justify-between">
                 <div>
-                  <span class="text-xs font-mono font-bold text-emerald-400 uppercase tracking-wider block mb-2">For The Ecosystem</span>
-                  <h3 class="text-xl font-bold text-white mb-2">Measurable Outcomes</h3>
-                  <p class="text-slate-300 text-sm leading-relaxed">
+                  <span class="text-[10px] sm:text-xs font-mono font-bold text-emerald-400 uppercase tracking-wider block mb-1.5 sm:mb-2">For The Ecosystem</span>
+                  <h3 class="text-base sm:text-xl font-bold text-white mb-1.5 sm:mb-2">Measurable Outcomes</h3>
+                  <p class="text-slate-300 text-xs sm:text-sm leading-relaxed">
                     Helps Cradle and Startup ASEAN prove real deals came from events.
                   </p>
                 </div>
               </div>
             </div>
 
-            <div class="p-4 rounded-xl bg-navy-800 border border-navy-600 mb-8 text-center text-xs font-mono text-cyan-400 font-bold">
+            <div class="p-3 sm:p-4 rounded-xl bg-navy-800 border border-navy-600 mb-4 sm:mb-8 text-center text-[10px] sm:text-xs font-mono text-cyan-400 font-bold">
               OUTCOMES WE TRACK:  Proposal Time (Months → Minutes)  •  Match Quality  •  Approved Trials  •  Live Commercial Contracts
             </div>
 
             <div class="text-center">
-              <p class="text-2xl md:text-3xl font-extrabold text-white tracking-tight">
+              <p class="text-lg sm:text-2xl md:text-3xl font-extrabold text-white tracking-tight">
                 “ASEAN POC-Architect — Turning connections into collaboration.”
               </p>
             </div>
@@ -695,6 +779,8 @@
       // Update Top Meta
       document.getElementById('slide-category').innerText = slide.category;
       document.getElementById('current-slide-num').innerText = slide.id;
+      const mobNum = document.getElementById('mobile-slide-num');
+      if (mobNum) mobNum.innerText = slide.id;
       
       // Update Notes Drawer
       document.getElementById('slide-timer').innerText = slide.timer;
@@ -703,6 +789,10 @@
 
       // Render Slide Content
       document.getElementById('slide-content').innerHTML = slide.render();
+
+      // Scroll container to top on slide change
+      const deckEl = document.getElementById('deck-container');
+      if (deckEl) deckEl.scrollTop = 0;
 
       // Render Indicators
       renderIndicators();
@@ -780,6 +870,69 @@
         toggleFullscreen();
       }
     });
+
+    function exportToPdf() {
+      let printContainer = document.getElementById('print-deck-container');
+      if (!printContainer) {
+        printContainer = document.createElement('div');
+        printContainer.id = 'print-deck-container';
+        document.body.appendChild(printContainer);
+      }
+
+      printContainer.innerHTML = SLIDES.map((s, idx) => `
+        <div class="print-slide-page">
+          <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-cyan-400 inline-block"></span>
+              <span class="text-xs font-mono font-bold tracking-widest text-cyan-400 uppercase">${s.category}</span>
+            </div>
+            <div class="text-xs font-mono text-slate-400">
+              Slide <span class="text-white font-bold">${idx + 1}</span> of ${SLIDES.length}
+            </div>
+          </div>
+          <div class="flex-1 flex flex-col justify-center my-auto">
+            ${s.render()}
+          </div>
+          <div class="pt-4 border-t border-navy-600/60 flex items-center justify-between text-xs text-slate-400">
+            <span class="text-slate-400 font-medium">Startup ASEAN • Hacktoberfest KL 2026</span>
+            <span class="font-mono text-cyan-400 font-semibold">ASEAN POC-Architect</span>
+          </div>
+        </div>
+      `).join('');
+
+      if (window.lucide) {
+        lucide.createIcons();
+      }
+
+      setTimeout(() => {
+        window.print();
+      }, 250);
+    }
+
+    // Mobile Touch Gesture Support (Swipe Left / Right to Change Slides)
+    let touchStartX = 0;
+    let touchStartY = 0;
+    let touchEndX = 0;
+    let touchEndY = 0;
+
+    document.addEventListener('touchstart', (e) => {
+      touchStartX = e.changedTouches[0].screenX;
+      touchStartY = e.changedTouches[0].screenY;
+    }, { passive: true });
+
+    document.addEventListener('touchend', (e) => {
+      touchEndX = e.changedTouches[0].screenX;
+      touchEndY = e.changedTouches[0].screenY;
+      const diffX = touchEndX - touchStartX;
+      const diffY = touchEndY - touchStartY;
+      if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 40) {
+        if (diffX < 0) {
+          nextSlide(); // Swiped left -> Next
+        } else {
+          prevSlide(); // Swiped right -> Previous
+        }
+      }
+    }, { passive: true });
 
     // Initialize on load
     document.addEventListener('DOMContentLoaded', () => {

@@ -73,7 +73,7 @@ export interface ProposalGenerationStages {
 }
 
 export interface GenerationMetadata {
-  provider: ModelProvider;
+  provider: ModelProvider | string;
   modelName: string;
   generationStatus: GenerationStatus;
   latencyMs: number;
@@ -81,6 +81,20 @@ export interface GenerationMetadata {
   attempts: number;
   completedAt: string;
   errorNote?: string;
+  // Multi-Model AI Gateway Execution Transparency
+  gatewayExecution?: {
+    requestedModelId?: string;
+    actualProviderId: string;
+    actualProviderName: string;
+    actualModelId: string;
+    latencyMs: number;
+    fallbackUsed: boolean;
+    fallbackReason?: string;
+    fallbackChain?: string[];
+    isCachedResult?: boolean;
+    cacheTimestamp?: string;
+    localOnlyEnforced?: boolean;
+  };
 }
 
 export interface ProposalGenerationResult {

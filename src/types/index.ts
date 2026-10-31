@@ -257,6 +257,31 @@ export interface PilotProposal {
   dataResidencyPlan: string;
   openQuestions: string[];
   legalDisclaimer: string;
+
+  // AI Gateway Execution Transparency Audit
+  generationMetadata?: {
+    provider: string;
+    modelName: string;
+    generationStatus: string;
+    latencyMs: number;
+    usedFallback: boolean;
+    attempts: number;
+    completedAt: string;
+    errorNote?: string;
+    gatewayExecution?: {
+      requestedModelId?: string;
+      actualProviderId: string;
+      actualProviderName: string;
+      actualModelId: string;
+      latencyMs: number;
+      fallbackUsed: boolean;
+      fallbackReason?: string;
+      fallbackChain?: string[];
+      isCachedResult?: boolean;
+      cacheTimestamp?: string;
+      localOnlyEnforced?: boolean;
+    };
+  };
 }
 
 export interface PipelineMetrics {

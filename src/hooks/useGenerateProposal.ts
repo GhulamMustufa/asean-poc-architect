@@ -6,6 +6,7 @@ import type { MatchResult } from '@/types';
 import { generateProposalWithFallback } from '@/lib/generateProposal';
 import { appStore } from '@/stores/appStore';
 import { scrollToTop } from '@/lib/scroll';
+import { getStoredModelConfig } from '@/components/ModelSwitcher';
 
 export function useGenerateProposal() {
   return useMutation({
@@ -16,7 +17,7 @@ export function useGenerateProposal() {
     mutationFn: async (match: MatchResult) => {
       const { challenge } = appStore.getState();
       if (!challenge) throw new Error('No active challenge');
-      return generateProposalWithFallback({ challenge, match });
+      return generateProposalWithFallback({ challenge, match, modelConfig: getStoredModelConfig() });
     },
     onSuccess: ({ proposal, usedFallback, error }) => {
       if (usedFallback) {

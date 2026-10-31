@@ -20,6 +20,8 @@ export function Providers({ children }: { children: ReactNode }) {
     <ThemeProvider
       attribute="data-theme"
       defaultTheme="dark"
+      // No theme toggle in the UI, so ignore any saved "light" choice.
+      forcedTheme="dark"
       enableSystem={false}
       themes={['dark', 'light']}
       disableTransitionOnChange

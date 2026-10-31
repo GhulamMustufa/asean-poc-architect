@@ -2,9 +2,8 @@
 
 import React from 'react';
 import Image from 'next/image';
-import { Plus } from 'lucide-react';
-import { ThemeToggle } from '@/components/ThemeToggle';
-import { ASEAN_LOGO_SRC } from '@/data/aseanCountries';
+import { Plus, Presentation } from 'lucide-react';
+import { ModelSwitcher } from '@/components/ModelSwitcher';
 import { ALL_STARTUPS } from '@/data/startups';
 import { cn } from '@/lib/utils';
 
@@ -21,26 +20,27 @@ export function Navbar({ currentView, onNavigate, onOpenStartupsModal }: NavbarP
         <button
           type="button"
           onClick={() => onNavigate('dashboard')}
-          className="flex items-center gap-3 rounded-lg bg-transparent p-1 -m-1 text-left"
-          aria-label="POC-Architect home"
+          className="brand-group rounded-lg bg-transparent p-1 -m-1 text-left"
+          style={{ gap: '0.6rem' }}
+          aria-label="ASEAN POC-Architect home"
         >
           <Image
-            src={ASEAN_LOGO_SRC}
-            alt="ASEAN logo"
-            width={36}
-            height={36}
+            src="/favicon.png"
+            alt="ASEAN POC-Architect Logo"
+            width={30}
+            height={30}
             priority
-            className="size-9 shrink-0"
+            className="size-[30px] shrink-0"
+            style={{ borderRadius: '7px', boxShadow: '0 0 10px rgba(var(--rgb-blue), 0.3)' }}
           />
-          <span className="flex flex-col leading-tight">
-            <span className="text-[1.05rem] font-bold tracking-tight text-foreground">POC-Architect</span>
-            <span className="text-[0.7rem] font-medium uppercase tracking-[0.14em] text-text-muted">
-              ASEAN Pilot Platform
-            </span>
-          </span>
+          <span className="brand-logo-badge max-sm:hidden">ASEAN</span>
+          <span className="brand-title">POC-Architect</span>
+          <span className="brand-tag max-md:hidden">Pilot Platform</span>
         </button>
 
-        <nav aria-label="Main" className="flex items-center gap-1 sm:gap-2">
+        <nav aria-label="Main" className="flex items-center gap-1.5 sm:gap-2">
+          <ModelSwitcher />
+
           <button
             type="button"
             onClick={() => onNavigate('dashboard')}
@@ -62,6 +62,18 @@ export function Navbar({ currentView, onNavigate, onOpenStartupsModal }: NavbarP
             <span className="ml-1.5 tabular-nums text-text-muted">{ALL_STARTUPS.length}</span>
           </button>
 
+          <a
+            href="/presentation.html"
+            target="_blank"
+            rel="noopener noreferrer"
+            title="Open the interactive pitch deck"
+            className="hidden items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium text-text-secondary transition-colors duration-200 ease-out hover:text-foreground lg:inline-flex"
+          >
+            <Presentation className="size-4" aria-hidden />
+            Pitch deck
+            <span className="sr-only">(opens in a new tab)</span>
+          </a>
+
           <button
             type="button"
             onClick={() => onNavigate('new-challenge')}
@@ -71,7 +83,6 @@ export function Navbar({ currentView, onNavigate, onOpenStartupsModal }: NavbarP
             New Project
           </button>
 
-          <ThemeToggle className="ml-1 max-md:glass max-md:size-10" />
 
           <button
             type="button"

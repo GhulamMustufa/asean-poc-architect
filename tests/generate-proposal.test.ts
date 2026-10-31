@@ -51,14 +51,16 @@ describe('generateProposalWithFallback', () => {
 
   test('the fetcher receives the expected request', async () => {
     const { fetcher, calls } = stubFetcher({ ok: false });
-    await generateProposalWithFallback({ challenge, match, fetcher, now: fixedNow });
+    const modelConfig = { preferredModelId: 'llama-3.1-8b-instant', localOnlyMode: true, simulateFailure: false };
+    await generateProposalWithFallback({ challenge, match, modelConfig, fetcher, now: fixedNow });
     assert.strictEqual(calls.length, 1);
     assert.strictEqual(calls[0].input, GENERATE_ENDPOINT);
     assert.strictEqual(calls[0].init?.method, 'POST');
     const body = JSON.parse(String(calls[0].init?.body));
-    assert.deepStrictEqual(Object.keys(body).sort(), ['challenge', 'providerPreference', 'startupId']);
+    assert.deepStrictEqual(Object.keys(body).sort(), ['challenge', 'localOnlyMode', 'preferredModelId', 'simulateFailure', 'startupId']);
     assert.strictEqual(body.startupId, match.startup.id);
-    assert.strictEqual(body.providerPreference, 'gemini');
+    assert.strictEqual(body.preferredModelId, 'llama-3.1-8b-instant');
+    assert.strictEqual(body.localOnlyMode, true);
     assert.strictEqual(body.challenge.id, challenge.id);
   });
 });

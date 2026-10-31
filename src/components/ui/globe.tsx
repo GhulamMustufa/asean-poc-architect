@@ -37,8 +37,9 @@ export function Globe({ className }: { className?: string }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const pointer = useRef<number | null>(null);
   const drag = useRef(0);
-  const { resolvedTheme } = useTheme();
-  const themeKey = resolvedTheme === 'light' ? 'light' : 'dark';
+  const { resolvedTheme, forcedTheme } = useTheme();
+  const activeTheme = forcedTheme ?? resolvedTheme;
+  const themeKey = activeTheme === 'light' ? 'light' : 'dark';
 
   useEffect(() => {
     const canvas = canvasRef.current;

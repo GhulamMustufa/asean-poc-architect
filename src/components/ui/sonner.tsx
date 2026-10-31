@@ -4,10 +4,11 @@ import { useTheme } from 'next-themes';
 import { Toaster as Sonner, type ToasterProps } from 'sonner';
 
 function Toaster(props: ToasterProps) {
-  const { resolvedTheme } = useTheme();
+  const { resolvedTheme, forcedTheme } = useTheme();
+  const activeTheme = forcedTheme ?? resolvedTheme;
   return (
     <Sonner
-      theme={resolvedTheme === 'light' ? 'light' : 'dark'}
+      theme={activeTheme === 'light' ? 'light' : 'dark'}
       position="top-center"
       offset={{ top: 80 }}
       mobileOffset={{ top: 72 }}

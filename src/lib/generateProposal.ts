@@ -3,9 +3,17 @@ import { generateStructuredProposal } from '@/lib/proposalGenerator';
 
 export type Fetcher = (input: string, init?: RequestInit) => Promise<Pick<Response, 'ok' | 'json'>>;
 
+export interface GatewayModelConfig {
+  preferredModelId?: string;
+  localOnlyMode?: boolean;
+  simulateFailure?: boolean;
+}
+
 export interface GenerateProposalInput {
   challenge: EnterpriseChallenge;
   match: MatchResult;
+  /** User's AI gateway choice from the model switcher. */
+  modelConfig?: GatewayModelConfig;
   fetcher?: Fetcher;
   now?: () => Date;
 }
@@ -18,8 +26,14 @@ export interface GenerateProposalResult {
 
 export const GENERATE_ENDPOINT = '/api/proposals/generate';
 
-export function buildGenerateRequestBody(challenge: EnterpriseChallenge, match: MatchResult) {
-  return { challenge, startupId: match.startup.id, providerPreference: 'gemini' as const };
+export function buildGenerateRequestBody(challenge: EnterpriseChallenge, match: MatchResult, modelConfig: GatewayModelConfig = {}) {
+  return {
+    challenge,
+    startupId: match.startup.id,
+    preferredModelId: modelConfig.preferredModelId,
+    localOnlyMode: modelConfig.localOnlyMode,
+    simulateFailure: modelConfig.simulateFailure,
+  };
 }
 
 /**
@@ -30,6 +44,7 @@ export function buildGenerateRequestBody(challenge: EnterpriseChallenge, match: 
 export async function generateProposalWithFallback({
   challenge,
   match,
+  modelConfig,
   fetcher = (input, init) => fetch(input, init),
   now = () => new Date(),
 }: GenerateProposalInput): Promise<GenerateProposalResult> {
@@ -47,7 +62,7 @@ export async function generateProposalWithFallback({
     const response = await fetcher(GENERATE_ENDPOINT, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(buildGenerateRequestBody(challenge, match)),
+      body: JSON.stringify(buildGenerateRequestBody(challenge, match, modelConfig)),
     });
 
     if (response.ok) {

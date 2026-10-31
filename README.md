@@ -10,6 +10,14 @@
 
 ---
 
+## 📊 Pitch Deck & Presentation Resources
+
+- **Interactive Web Pitch Deck:** View the full 7-slide deck at [`presentation/index.html`](./presentation/index.html) (or in the running app at `/presentation.html`). Supports keyboard navigation (`←`/`→`) and presenter script drawer (`S` key).
+- **Printable / Export to PDF Edition:** All 7 slides pre-rendered for clean 16:9 / A4 landscape export at [`presentation/slides-printable.html`](./presentation/slides-printable.html) (or in the running app at `/slides-printable.html`). Includes a 1-click **"Save Entire Deck as PDF"** button.
+- **Presenter Word-for-Word Script:** Full 4-minute plain-English talking script for judges in [`presentation/SPEAKER_SCRIPT.md`](./presentation/SPEAKER_SCRIPT.md).
+
+---
+
 ## 🌟 Overview
 
 Corporate innovation teams and banks often take **4 to 9 months** to scope innovation pilots and evaluate startups. Most discussions stall because:
