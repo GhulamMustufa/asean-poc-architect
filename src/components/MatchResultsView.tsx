@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { CountryFlag } from '@/components/CountryFlag';
 import { EnterpriseChallenge, MatchResult } from '@/types';
 
 interface MatchResultsViewProps {
@@ -65,7 +66,7 @@ export function MatchResultsView({
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.5rem' }}>
               <span className="badge badge-supplied">Your Project Request</span>
-              <span className="badge badge-country">{challenge.country}</span>
+              <CountryFlag code={challenge.country} />
               <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>• {challenge.enterpriseName}</span>
             </div>
             <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-primary)' }}>
@@ -197,7 +198,7 @@ export function MatchResultsView({
                   <div className="match-header">
                     <div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.35rem' }}>
-                        <span className="badge badge-country">{m.startup.country}</span>
+                        <CountryFlag code={m.startup.country} />
                         <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
                           {m.startup.stage} • Founded {m.startup.foundedYear}
                         </span>

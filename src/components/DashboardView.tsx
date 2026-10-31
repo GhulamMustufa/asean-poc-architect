@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { CountryFlag } from '@/components/CountryFlag';
 import { PilotProposal, PipelineMetrics, ProposalStatus } from '@/types';
 import { downloadProposalPdf } from '@/lib/pdfExport';
 
@@ -207,7 +208,7 @@ export function DashboardView({
                       <td>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                           <span style={{ fontWeight: 600, color: 'var(--accent-cyan)' }}>{p.startupName}</span>
-                          <span className="badge badge-country" style={{ fontSize: '0.7rem' }}>{p.startupCountry}</span>
+                          <CountryFlag code={p.startupCountry} />
                         </div>
                         {p.editedFields && p.editedFields.length > 0 && (
                           <span style={{ fontSize: '0.7rem', color: 'var(--accent-amber)' }}>

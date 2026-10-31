@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { CountryFlag } from '@/components/CountryFlag';
 import { PilotProposal, ProposalMilestone, ProposalKpi, RaciItem, ProposalStatus } from '@/types';
 import { downloadFile, formatProposalMarkdown } from '@/lib/exportUtils';
 import { downloadProposalPdf } from '@/lib/pdfExport';
@@ -411,7 +412,7 @@ export function ProposalWorkspace({ proposal, onSave, onBack }: ProposalWorkspac
             <div>
               <span className="badge badge-verified" style={{ marginBottom: '0.35rem' }}>Matched Tech Startup</span>
               <h2 style={{ fontSize: '1.15rem', fontWeight: 700 }}>
-                {currentProposal.startupName} <span className="badge badge-country">{currentProposal.startupCountry}</span>
+                {currentProposal.startupName} <CountryFlag code={currentProposal.startupCountry} />
               </h2>
               <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Solution Provider</span>
             </div>

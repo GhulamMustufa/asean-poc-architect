@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { CountryFlag } from '@/components/CountryFlag';
 import { ALL_STARTUPS } from '@/data/startups';
 import { ASEANCountry, CuratedStartup } from '@/types';
 
@@ -130,7 +131,7 @@ export function StartupsModal({ isOpen, onClose, onSelectStartup }: StartupsModa
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '1rem', flexWrap: 'wrap' }}>
                   <div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem', flexWrap: 'wrap' }}>
-                      <span className="badge badge-country">{s.country}</span>
+                      <CountryFlag code={s.country} />
                       <h3 style={{ fontSize: '1.1rem', fontWeight: 700 }}>{s.name}</h3>
                       <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>• {s.stage} (Est. {s.foundedYear})</span>
                       {!s.isSyntheticDemo ? (
