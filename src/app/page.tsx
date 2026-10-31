@@ -19,7 +19,7 @@ export default function Home() {
   const [proposals, setProposals] = useState<PilotProposal[]>([]);
   const [metrics, setMetrics] = useState<PipelineMetrics>({
     activeChallenges: 4,
-    matchedStartups: 12,
+    matchedStartups: ALL_STARTUPS.length,
     completedProposals: 2,
     avgFeasibilityScore: 89.4,
     avgPilotDurationWeeks: 8,

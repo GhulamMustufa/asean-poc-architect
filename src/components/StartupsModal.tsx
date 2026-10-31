@@ -177,7 +177,7 @@ export function StartupsModal({ isOpen, onClose, onSelectStartup }: StartupsModa
                   ))}
                 </div>
 
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid var(--border-subtle)', paddingTop: '0.75rem', fontSize: '0.775rem', color: 'var(--text-muted)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem', borderTop: '1px solid var(--border-subtle)', paddingTop: '0.75rem', fontSize: '0.775rem', color: 'var(--text-muted)' }}>
                   <div>
                     <span><strong>Past Work:</strong> {s.notableDeployments.join(', ')}</span>
                   </div>

@@ -36,7 +36,8 @@ export function Navbar({ currentView, onNavigate, onOpenStartupsModal }: NavbarP
             className="nav-link"
             onClick={onOpenStartupsModal}
           >
-            Startup Directory ({ALL_STARTUPS.length})
+            <span className="desktop-only">Startup Directory ({ALL_STARTUPS.length})</span>
+            <span className="mobile-only">Startups ({ALL_STARTUPS.length})</span>
           </button>
 
           <button
@@ -44,7 +45,9 @@ export function Navbar({ currentView, onNavigate, onOpenStartupsModal }: NavbarP
             className="btn btn-primary btn-sm"
             onClick={() => onNavigate('new-challenge')}
           >
-            <span>+</span> Start New Project
+            <span>+</span>
+            <span className="desktop-only">Start New Project</span>
+            <span className="mobile-only">New Project</span>
           </button>
         </div>
       </div>

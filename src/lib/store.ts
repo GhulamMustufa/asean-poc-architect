@@ -380,7 +380,7 @@ export function getPipelineMetrics(): PipelineMetrics {
 
   return {
     activeChallenges: Math.max(storedChallenges.length, proposals.length + 2, 4),
-    matchedStartups: CURATED_STARTUPS.length,
+    matchedStartups: ALL_STARTUPS.length,
     completedProposals: proposals.length,
     avgFeasibilityScore: 89.4,
     avgPilotDurationWeeks: proposals.length > 0 ? Math.round(totalDuration / proposals.length) : 8,

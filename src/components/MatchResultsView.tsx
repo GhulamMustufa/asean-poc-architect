@@ -195,14 +195,14 @@ export function MatchResultsView({
 
                   {/* Top Bar with Score */}
                   <div className="match-header">
-                    <div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.35rem' }}>
+                    <div style={{ flex: '1 1 auto', minWidth: 0 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.35rem', flexWrap: 'wrap' }}>
                         <span className="badge badge-country">{m.startup.country}</span>
                         <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
                           {m.startup.stage} • Founded {m.startup.foundedYear}
                         </span>
                       </div>
-                      <h3 style={{ fontSize: '1.2rem', fontWeight: 800 }}>
+                      <h3 style={{ fontSize: '1.2rem', fontWeight: 800, wordBreak: 'break-word' }}>
                         {m.startup.name}
                       </h3>
                       <p style={{ fontSize: '0.825rem', color: 'var(--accent-cyan)', fontWeight: 500, marginTop: '0.15rem' }}>
@@ -210,7 +210,7 @@ export function MatchResultsView({
                       </p>
                     </div>
 
-                    <div className="match-score-badge" style={{ padding: '0.6rem 1rem', minWidth: '85px' }}>
+                    <div className="match-score-badge" style={{ padding: '0.5rem 0.85rem', minWidth: '76px', flexShrink: 0 }}>
                       <span className="score-num" style={{ fontSize: '1.85rem' }}>{m.overallScore}%</span>
                       <span className="score-label" style={{ fontSize: '0.7rem' }}>Match Fit</span>
                     </div>
@@ -294,7 +294,7 @@ export function MatchResultsView({
                         <div style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--accent-cyan)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.4rem' }}>
                           Match Score Breakdown Across 5 Dimensions
                         </div>
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '0.4rem', fontSize: '0.75rem' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(110px, 1fr))', gap: '0.4rem', fontSize: '0.75rem' }}>
                           <div className="score-chip">
                             Skills: <strong>{m.dimensionScores.capabilityMatch.rawScore}/100</strong>
                           </div>

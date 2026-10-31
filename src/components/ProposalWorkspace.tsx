@@ -199,12 +199,12 @@ export function ProposalWorkspace({ proposal, onSave, onBack }: ProposalWorkspac
     <div className="proposal-workspace">
       {/* Top Navigation & Status Bar */}
       <div className="proposal-topbar no-print">
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap', flex: '1 1 280px', minWidth: 0 }}>
           <button type="button" className="btn btn-outline btn-sm" onClick={onBack}>
             ← Back to Projects
           </button>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <div style={{ minWidth: 0, flex: '1 1 auto' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
               <span
                 className={`badge ${
                   currentProposal.status === 'Approved'
@@ -227,7 +227,7 @@ export function ProposalWorkspace({ proposal, onSave, onBack }: ProposalWorkspac
                 </span>
               )}
             </div>
-            <h1 style={{ fontSize: '1.25rem', fontWeight: 800, marginTop: '0.2rem' }}>
+            <h1 style={{ fontSize: '1.25rem', fontWeight: 800, marginTop: '0.2rem', wordBreak: 'break-word' }}>
               {currentProposal.challengeTitle}
             </h1>
           </div>

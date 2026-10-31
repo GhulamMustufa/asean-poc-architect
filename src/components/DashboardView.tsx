@@ -185,7 +185,7 @@ export function DashboardView({
               return (
                 <div key={p.id} className="deal-card">
                   {/* Left: Enterprise & Startup Info */}
-                  <div style={{ flex: '1 1 340px' }}>
+                  <div style={{ flex: '1 1 280px', minWidth: 0 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.4rem', flexWrap: 'wrap' }}>
                       <span className="badge badge-country">{p.startupCountry}</span>
                       <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}>
@@ -197,11 +197,11 @@ export function DashboardView({
                       </span>
                     </div>
 
-                    <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#ffffff', margin: '0.2rem 0' }}>
+                    <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#ffffff', margin: '0.2rem 0', wordBreak: 'break-word' }}>
                       {p.challengeTitle}
                     </h3>
 
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginTop: '0.5rem', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginTop: '0.5rem', fontSize: '0.8rem', color: 'var(--text-muted)', flexWrap: 'wrap' }}>
                       <span>⏱ {p.milestones?.reduce((acc, m) => acc + m.durationWeeks, 0) || 8}-Week Pilot</span>
                       <span>•</span>
                       <span>Updated {new Date(p.updatedAt).toLocaleDateString('en-SG', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
