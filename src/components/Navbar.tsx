@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { ModelSwitcher } from './ModelSwitcher';
 
 interface NavbarProps {
   currentView: 'dashboard' | 'new-challenge' | 'match-results' | 'proposal';
@@ -19,6 +20,8 @@ export function Navbar({ currentView, onNavigate, onOpenStartupsModal }: NavbarP
         </div>
 
         <div className="nav-links">
+          <ModelSwitcher />
+
           <button
             type="button"
             className={`nav-link ${currentView === 'dashboard' ? 'active' : ''}`}

@@ -12,6 +12,7 @@ import { ChallengeForm } from '@/components/ChallengeForm';
 import { MatchResultsView } from '@/components/MatchResultsView';
 import { ProposalWorkspace } from '@/components/ProposalWorkspace';
 import { StartupsModal } from '@/components/StartupsModal';
+import { getStoredModelConfig } from '@/components/ModelSwitcher';
 
 export default function Home() {
   const [currentView, setCurrentView] = useState<'dashboard' | 'new-challenge' | 'match-results' | 'proposal'>('dashboard');
@@ -59,6 +60,9 @@ export default function Home() {
     setIsGeneratingProposal(true);
 
     try {
+      // Retrieve user's configured model selection, local-only preference, or failure simulation
+      const modelConfig = getStoredModelConfig();
+
       // Call server-side AI generation route
       const response = await fetch('/api/proposals/generate', {
         method: 'POST',
@@ -66,7 +70,9 @@ export default function Home() {
         body: JSON.stringify({
           challenge: currentChallenge,
           startupId: match.startup.id,
-          providerPreference: 'gemini'
+          preferredModelId: modelConfig.preferredModelId,
+          localOnlyMode: modelConfig.localOnlyMode,
+          simulateFailure: modelConfig.simulateFailure
         })
       });
 
