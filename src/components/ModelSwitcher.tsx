@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import { ChevronDown } from 'lucide-react';
 
 export interface ModelConfig {
   preferredModelId: string; // 'auto' | 'gemma-4-31b-it' | 'llama-3.1-8b-instant' | 'gemma2:2b' | 'qwen2.5-coder:3b' | 'deterministic-demo-engine'
@@ -44,7 +45,7 @@ export function saveModelConfig(config: ModelConfig) {
   window.dispatchEvent(new CustomEvent('ai_gateway_config_changed', { detail: config }));
 }
 
-export function ModelSwitcher() {
+export function ModelSwitcher({ compact = false }: { compact?: boolean }) {
   const [isOpen, setIsOpen] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [config, setConfig] = useState<ModelConfig>(DEFAULT_MODEL_CONFIG);
@@ -63,8 +64,15 @@ export function ModelSwitcher() {
         setIsOpen(false);
       }
     };
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setIsOpen(false);
+    };
     document.addEventListener('mousedown', handleOutsideClick);
-    return () => document.removeEventListener('mousedown', handleOutsideClick);
+    document.addEventListener('keydown', handleEscape);
+    return () => {
+      document.removeEventListener('mousedown', handleOutsideClick);
+      document.removeEventListener('keydown', handleEscape);
+    };
   }, []);
 
   const fetchHealth = async () => {
@@ -108,12 +116,12 @@ export function ModelSwitcher() {
   };
 
   const getProviderStatus = (providerId: string): { label: string; color: string; note?: string } => {
-    if (loadingHealth) return { label: 'Checking', color: '#94a3b8' };
+    if (loadingHealth) return { label: 'Checking', color: 'var(--text-secondary)' };
     const p = health.find(h => h.providerId === providerId);
-    if (!p) return { label: 'Checking', color: '#94a3b8' };
-    if (p.status === 'connected') return { label: 'Connected', color: '#10b981' };
-    if (p.status === 'not_configured') return { label: 'Not Configured', color: '#f59e0b', note: p.errorNote };
-    return { label: 'Unavailable', color: '#ef4444', note: p.errorNote };
+    if (!p) return { label: 'Checking', color: 'var(--text-secondary)' };
+    if (p.status === 'connected') return { label: 'Connected', color: 'var(--accent-emerald)' };
+    if (p.status === 'not_configured') return { label: 'Not Configured', color: 'var(--accent-amber)', note: p.errorNote };
+    return { label: 'Unavailable', color: 'var(--accent-rose)', note: p.errorNote };
   };
 
   // Label for active button in navbar
@@ -132,12 +140,12 @@ export function ModelSwitcher() {
   const ollamaStatus = getProviderStatus('ollama');
 
   const getDotColor = () => {
-    if (config.simulateFailure) return '#ef4444';
-    if (config.localOnlyMode) return '#10b981';
+    if (config.simulateFailure) return 'var(--accent-rose)';
+    if (config.localOnlyMode) return 'var(--accent-emerald)';
     if (config.preferredModelId === 'gemma-4-31b-it') return googleStatus.color;
     if (config.preferredModelId === 'llama-3.1-8b-instant') return groqStatus.color;
     if (config.preferredModelId?.startsWith('gemma2') || config.preferredModelId?.startsWith('qwen')) return ollamaStatus.color;
-    return '#38bdf8';
+    return 'var(--accent-cyan)';
   };
 
   return (
@@ -157,24 +165,27 @@ export function ModelSwitcher() {
           padding: '0.42rem 0.8rem',
           borderRadius: '999px',
           border: config.simulateFailure
-            ? '1px dashed #ef4444'
+            ? '1px dashed var(--accent-rose)'
             : config.localOnlyMode
-            ? (isHovered ? '1px solid #10b981' : '1px solid rgba(16, 185, 129, 0.4)')
-            : (isHovered ? '1px solid rgba(56, 189, 248, 0.5)' : '1px solid rgba(255, 255, 255, 0.14)'),
+            ? (isHovered ? '1px solid var(--accent-emerald)' : '1px solid rgba(var(--rgb-blue), 0.4)')
+            : (isHovered ? '1px solid rgba(var(--rgb-blue), 0.5)' : '1px solid rgba(var(--rgb-fg), 0.14)'),
           background: config.simulateFailure
-            ? (isHovered ? 'rgba(239, 68, 68, 0.2)' : 'rgba(239, 68, 68, 0.12)')
+            ? (isHovered ? 'rgba(var(--rgb-red), 0.2)' : 'rgba(var(--rgb-red), 0.12)')
             : config.localOnlyMode
-            ? (isHovered ? 'rgba(16, 185, 129, 0.18)' : 'rgba(16, 185, 129, 0.1)')
-            : (isHovered ? 'rgba(255, 255, 255, 0.12)' : 'rgba(255, 255, 255, 0.06)'),
+            ? (isHovered ? 'rgba(var(--rgb-blue), 0.18)' : 'rgba(var(--rgb-blue), 0.1)')
+            : (isHovered ? 'rgba(var(--rgb-fg), 0.12)' : 'rgba(var(--rgb-fg), 0.06)'),
           backdropFilter: 'blur(10px)',
-          color: '#f8fafc',
+          color: 'var(--text-primary)',
           cursor: 'pointer',
           transition: 'all 0.2s ease',
           boxShadow: isHovered
-            ? '0 4px 12px rgba(0, 0, 0, 0.35), 0 0 10px rgba(56, 189, 248, 0.15)'
-            : '0 2px 8px rgba(0, 0, 0, 0.25)'
+            ? '0 4px 12px var(--bg-sunken), 0 0 10px rgba(var(--rgb-blue), 0.15)'
+            : '0 2px 8px var(--bg-sunken)'
         }}
         title="Universal AI Gateway: Multi-Model Routing & Automatic Failover"
+        aria-label={`AI model: ${getActiveDisplayLabel()}`}
+        aria-expanded={isOpen}
+        aria-haspopup="dialog"
       >
         <span
           style={{
@@ -186,48 +197,52 @@ export function ModelSwitcher() {
             boxShadow: `0 0 8px ${getDotColor()}`
           }}
         />
-        <span style={{ color: '#f1f5f9', letterSpacing: '-0.01em' }}>{getActiveDisplayLabel()}</span>
+        <span style={{ color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>{compact ? 'AI' : (<><span className="md:hidden">AI</span><span className="max-md:hidden">{getActiveDisplayLabel()}</span></>)}</span>
         {config.localOnlyMode && (
-          <span style={{ fontSize: '0.65rem', background: 'rgba(16, 185, 129, 0.2)', color: '#34d399', padding: '1px 6px', borderRadius: '999px', fontWeight: 600 }}>
+          <span style={{ fontSize: '0.65rem', background: 'rgba(var(--rgb-blue), 0.2)', color: 'var(--accent-emerald)', padding: '1px 6px', borderRadius: '999px', fontWeight: 600 }}>
             Edge
           </span>
         )}
         {config.simulateFailure && (
-          <span style={{ fontSize: '0.65rem', background: 'rgba(239, 68, 68, 0.25)', color: '#f87171', padding: '1px 6px', borderRadius: '999px', fontWeight: 600 }}>
+          <span style={{ fontSize: '0.65rem', background: 'rgba(var(--rgb-red), 0.25)', color: 'var(--accent-rose)', padding: '1px 6px', borderRadius: '999px', fontWeight: 600 }}>
             Sim Fail
           </span>
         )}
-        <span style={{ fontSize: '0.65rem', opacity: 0.6, marginLeft: '2px', color: '#94a3b8' }}>▼</span>
+        <ChevronDown aria-hidden style={{ width: 14, height: 14, opacity: 0.7, color: 'var(--text-secondary)', transform: isOpen ? 'rotate(180deg)' : undefined, transition: 'transform 0.2s ease-out' }} />
       </button>
 
       {isOpen && (
         <div
           id="ai-model-switcher-panel"
+          className="model-panel"
+          role="dialog"
+          aria-label="AI model settings"
+          data-lenis-prevent
           style={{
             position: 'absolute',
             right: 0,
             marginTop: '0.6rem',
             width: 'min(360px, calc(100vw - 1.5rem))',
             maxWidth: 'calc(100vw - 1.5rem)',
-            background: 'rgba(15, 23, 42, 0.96)',
+            background: 'var(--bg-card)',
             backdropFilter: 'blur(20px)',
             borderRadius: '12px',
-            boxShadow: '0 20px 40px -5px rgba(0, 0, 0, 0.7), 0 0 1px 1px rgba(255, 255, 255, 0.1)',
-            border: '1px solid rgba(255, 255, 255, 0.12)',
+            boxShadow: '0 20px 40px -5px rgba(0, 0, 0, 0.35), 0 0 1px 1px rgba(var(--rgb-fg), 0.1)',
+            border: '1px solid rgba(var(--rgb-fg), 0.12)',
             zIndex: 1000,
             padding: '0.9rem',
             fontSize: '0.82rem',
-            color: '#f8fafc'
+            color: 'var(--text-primary)'
           }}
         >
           {/* Header */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem', borderBottom: '1px solid rgba(255, 255, 255, 0.08)', paddingBottom: '0.5rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem', borderBottom: '1px solid rgba(var(--rgb-fg), 0.08)', paddingBottom: '0.5rem' }}>
             <div>
-              <div style={{ fontWeight: 700, color: '#f8fafc', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              <div style={{ fontWeight: 700, color: 'var(--text-primary)', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                 <span>Universal AI Gateway</span>
-                <span style={{ fontSize: '0.65rem', background: 'rgba(56, 189, 248, 0.15)', color: '#38bdf8', padding: '1px 6px', borderRadius: '999px' }}>v2.4</span>
+                <span style={{ fontSize: '0.65rem', background: 'rgba(var(--rgb-blue), 0.15)', color: 'var(--accent-cyan)', padding: '1px 6px', borderRadius: '999px' }}>v2.4</span>
               </div>
-              <div style={{ fontSize: '0.7rem', color: '#94a3b8' }}>Multi-Model Routing & Automatic Failover</div>
+              <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>Multi-Model Routing & Automatic Failover</div>
             </div>
             <button
               type="button"
@@ -238,9 +253,9 @@ export function ModelSwitcher() {
                 fontWeight: 600,
                 padding: '3px 8px',
                 borderRadius: '6px',
-                border: '1px solid rgba(255, 255, 255, 0.12)',
-                background: 'rgba(30, 41, 59, 0.8)',
-                color: '#cbd5e1',
+                border: '1px solid rgba(var(--rgb-fg), 0.12)',
+                background: 'var(--bg-card)',
+                color: 'var(--text-secondary)',
                 cursor: loadingHealth ? 'wait' : 'pointer',
                 transition: 'all 0.15s ease'
               }}
@@ -251,7 +266,7 @@ export function ModelSwitcher() {
 
           {/* Model Options List */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.45rem', marginBottom: '0.85rem' }}>
-            <div style={{ fontSize: '0.68rem', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+            <div style={{ fontSize: '0.68rem', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
               Select Active AI Model:
             </div>
 
@@ -261,8 +276,8 @@ export function ModelSwitcher() {
               style={{
                 padding: '0.55rem 0.65rem',
                 borderRadius: '8px',
-                border: config.preferredModelId === 'auto' ? '1px solid #38bdf8' : '1px solid rgba(255, 255, 255, 0.06)',
-                background: config.preferredModelId === 'auto' ? 'rgba(14, 165, 233, 0.15)' : 'rgba(30, 41, 59, 0.4)',
+                border: config.preferredModelId === 'auto' ? '1px solid var(--accent-cyan)' : '1px solid rgba(var(--rgb-fg), 0.06)',
+                background: config.preferredModelId === 'auto' ? 'rgba(var(--rgb-blue), 0.15)' : 'var(--bg-card)',
                 cursor: 'pointer',
                 display: 'flex',
                 justifyContent: 'space-between',
@@ -271,12 +286,12 @@ export function ModelSwitcher() {
               }}
             >
               <div>
-                <div style={{ fontWeight: 600, color: config.preferredModelId === 'auto' ? '#38bdf8' : '#f1f5f9', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                <div style={{ fontWeight: 600, color: config.preferredModelId === 'auto' ? 'var(--accent-cyan)' : 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
                   <span>Automatic (Recommended)</span>
                 </div>
-                <div style={{ fontSize: '0.7rem', color: '#94a3b8' }}>Google Gemma ➔ Groq ➔ Ollama ➔ Cache</div>
+                <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>Google Gemma ➔ Groq ➔ Ollama ➔ Cache</div>
               </div>
-              <span style={{ fontSize: '0.68rem', background: 'rgba(56, 189, 248, 0.2)', color: '#38bdf8', padding: '2px 7px', borderRadius: '999px', fontWeight: 600 }}>
+              <span style={{ fontSize: '0.68rem', background: 'rgba(var(--rgb-blue), 0.2)', color: 'var(--accent-cyan)', padding: '2px 7px', borderRadius: '999px', fontWeight: 600 }}>
                 Cascade
               </span>
             </div>
@@ -287,8 +302,8 @@ export function ModelSwitcher() {
               style={{
                 padding: '0.55rem 0.65rem',
                 borderRadius: '8px',
-                border: config.preferredModelId === 'gemma-4-31b-it' ? '1px solid #38bdf8' : '1px solid rgba(255, 255, 255, 0.06)',
-                background: config.preferredModelId === 'gemma-4-31b-it' ? 'rgba(14, 165, 233, 0.15)' : 'rgba(30, 41, 59, 0.4)',
+                border: config.preferredModelId === 'gemma-4-31b-it' ? '1px solid var(--accent-cyan)' : '1px solid rgba(var(--rgb-fg), 0.06)',
+                background: config.preferredModelId === 'gemma-4-31b-it' ? 'rgba(var(--rgb-blue), 0.15)' : 'var(--bg-card)',
                 cursor: 'pointer',
                 display: 'flex',
                 justifyContent: 'space-between',
@@ -298,8 +313,8 @@ export function ModelSwitcher() {
               }}
             >
               <div>
-                <div style={{ fontWeight: 600, color: config.preferredModelId === 'gemma-4-31b-it' ? '#38bdf8' : '#f1f5f9' }}>Google Gemma 4 (31B IT)</div>
-                <div style={{ fontSize: '0.7rem', color: '#94a3b8' }}>Cloud • Deep Enterprise Reasoning Engine</div>
+                <div style={{ fontWeight: 600, color: config.preferredModelId === 'gemma-4-31b-it' ? 'var(--accent-cyan)' : 'var(--text-primary)' }}>Google Gemma 4 (31B IT)</div>
+                <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>Cloud • Deep Enterprise Reasoning Engine</div>
               </div>
               <span style={{ fontSize: '0.7rem', color: googleStatus.color, fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
                 <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: googleStatus.color }} />
@@ -313,8 +328,8 @@ export function ModelSwitcher() {
               style={{
                 padding: '0.55rem 0.65rem',
                 borderRadius: '8px',
-                border: (config.preferredModelId === 'llama-3.1-8b-instant' || config.preferredModelId === 'groq-instant') ? '1px solid #38bdf8' : '1px solid rgba(255, 255, 255, 0.06)',
-                background: (config.preferredModelId === 'llama-3.1-8b-instant' || config.preferredModelId === 'groq-instant') ? 'rgba(14, 165, 233, 0.15)' : 'rgba(30, 41, 59, 0.4)',
+                border: (config.preferredModelId === 'llama-3.1-8b-instant' || config.preferredModelId === 'groq-instant') ? '1px solid var(--accent-cyan)' : '1px solid rgba(var(--rgb-fg), 0.06)',
+                background: (config.preferredModelId === 'llama-3.1-8b-instant' || config.preferredModelId === 'groq-instant') ? 'rgba(var(--rgb-blue), 0.15)' : 'var(--bg-card)',
                 cursor: 'pointer',
                 display: 'flex',
                 justifyContent: 'space-between',
@@ -324,8 +339,8 @@ export function ModelSwitcher() {
               }}
             >
               <div>
-                <div style={{ fontWeight: 600, color: (config.preferredModelId === 'llama-3.1-8b-instant' || config.preferredModelId === 'groq-instant') ? '#38bdf8' : '#f1f5f9' }}>Groq Cloud (Instant LPU)</div>
-                <div style={{ fontSize: '0.7rem', color: '#94a3b8' }}>Cloud • Sub-second rapid demo generation</div>
+                <div style={{ fontWeight: 600, color: (config.preferredModelId === 'llama-3.1-8b-instant' || config.preferredModelId === 'groq-instant') ? 'var(--accent-cyan)' : 'var(--text-primary)' }}>Groq Cloud (Instant LPU)</div>
+                <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>Cloud • Sub-second rapid demo generation</div>
               </div>
               <span style={{ fontSize: '0.7rem', color: groqStatus.color, fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
                 <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: groqStatus.color }} />
@@ -339,8 +354,8 @@ export function ModelSwitcher() {
               style={{
                 padding: '0.55rem 0.65rem',
                 borderRadius: '8px',
-                border: config.preferredModelId === 'gemma2:2b' ? '1px solid #38bdf8' : '1px solid rgba(255, 255, 255, 0.06)',
-                background: config.preferredModelId === 'gemma2:2b' ? 'rgba(14, 165, 233, 0.15)' : 'rgba(30, 41, 59, 0.4)',
+                border: config.preferredModelId === 'gemma2:2b' ? '1px solid var(--accent-cyan)' : '1px solid rgba(var(--rgb-fg), 0.06)',
+                background: config.preferredModelId === 'gemma2:2b' ? 'rgba(var(--rgb-blue), 0.15)' : 'var(--bg-card)',
                 cursor: 'pointer',
                 display: 'flex',
                 justifyContent: 'space-between',
@@ -349,8 +364,8 @@ export function ModelSwitcher() {
               }}
             >
               <div>
-                <div style={{ fontWeight: 600, color: config.preferredModelId === 'gemma2:2b' ? '#38bdf8' : '#f1f5f9' }}>Local Ollama (Gemma 2:2B)</div>
-                <div style={{ fontSize: '0.7rem', color: '#94a3b8' }}>Local Apple Silicon GPU • Air-Gap Friendly</div>
+                <div style={{ fontWeight: 600, color: config.preferredModelId === 'gemma2:2b' ? 'var(--accent-cyan)' : 'var(--text-primary)' }}>Local Ollama (Gemma 2:2B)</div>
+                <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>Local Apple Silicon GPU • Air-Gap Friendly</div>
               </div>
               <span style={{ fontSize: '0.7rem', color: ollamaStatus.color, fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
                 <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: ollamaStatus.color }} />
@@ -364,8 +379,8 @@ export function ModelSwitcher() {
               style={{
                 padding: '0.55rem 0.65rem',
                 borderRadius: '8px',
-                border: config.preferredModelId === 'qwen2.5-coder:3b' ? '1px solid #38bdf8' : '1px solid rgba(255, 255, 255, 0.06)',
-                background: config.preferredModelId === 'qwen2.5-coder:3b' ? 'rgba(14, 165, 233, 0.15)' : 'rgba(30, 41, 59, 0.4)',
+                border: config.preferredModelId === 'qwen2.5-coder:3b' ? '1px solid var(--accent-cyan)' : '1px solid rgba(var(--rgb-fg), 0.06)',
+                background: config.preferredModelId === 'qwen2.5-coder:3b' ? 'rgba(var(--rgb-blue), 0.15)' : 'var(--bg-card)',
                 cursor: 'pointer',
                 display: 'flex',
                 justifyContent: 'space-between',
@@ -374,8 +389,8 @@ export function ModelSwitcher() {
               }}
             >
               <div>
-                <div style={{ fontWeight: 600, color: config.preferredModelId === 'qwen2.5-coder:3b' ? '#38bdf8' : '#f1f5f9' }}>Local Ollama (Qwen 2.5:3B)</div>
-                <div style={{ fontSize: '0.7rem', color: '#94a3b8' }}>Local Apple Silicon GPU • Schema Specialist</div>
+                <div style={{ fontWeight: 600, color: config.preferredModelId === 'qwen2.5-coder:3b' ? 'var(--accent-cyan)' : 'var(--text-primary)' }}>Local Ollama (Qwen 2.5:3B)</div>
+                <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>Local Apple Silicon GPU • Schema Specialist</div>
               </div>
               <span style={{ fontSize: '0.7rem', color: ollamaStatus.color, fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
                 <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: ollamaStatus.color }} />
@@ -389,8 +404,8 @@ export function ModelSwitcher() {
               style={{
                 padding: '0.55rem 0.65rem',
                 borderRadius: '8px',
-                border: config.preferredModelId === 'deterministic-demo-engine' ? '1px solid #38bdf8' : '1px solid rgba(255, 255, 255, 0.06)',
-                background: config.preferredModelId === 'deterministic-demo-engine' ? 'rgba(14, 165, 233, 0.15)' : 'rgba(30, 41, 59, 0.4)',
+                border: config.preferredModelId === 'deterministic-demo-engine' ? '1px solid var(--accent-cyan)' : '1px solid rgba(var(--rgb-fg), 0.06)',
+                background: config.preferredModelId === 'deterministic-demo-engine' ? 'rgba(var(--rgb-blue), 0.15)' : 'var(--bg-card)',
                 cursor: 'pointer',
                 display: 'flex',
                 justifyContent: 'space-between',
@@ -399,57 +414,57 @@ export function ModelSwitcher() {
               }}
             >
               <div>
-                <div style={{ fontWeight: 600, color: config.preferredModelId === 'deterministic-demo-engine' ? '#38bdf8' : '#f1f5f9' }}>Offline Grounded Demo Engine</div>
-                <div style={{ fontSize: '0.7rem', color: '#94a3b8' }}>Zero Network • 100% Guaranteed Reliability</div>
+                <div style={{ fontWeight: 600, color: config.preferredModelId === 'deterministic-demo-engine' ? 'var(--accent-cyan)' : 'var(--text-primary)' }}>Offline Grounded Demo Engine</div>
+                <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>Zero Network • 100% Guaranteed Reliability</div>
               </div>
-              <span style={{ fontSize: '0.7rem', color: '#10b981', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-                <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#10b981' }} />
+              <span style={{ fontSize: '0.7rem', color: 'var(--accent-emerald)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: 'var(--accent-emerald)' }} />
                 Always Ready
               </span>
             </div>
           </div>
 
           {/* Controls & Governance Toggles */}
-          <div style={{ borderTop: '1px solid rgba(255, 255, 255, 0.08)', paddingTop: '0.65rem', display: 'flex', flexDirection: 'column', gap: '0.45rem' }}>
-            <div style={{ fontSize: '0.68rem', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+          <div style={{ borderTop: '1px solid rgba(var(--rgb-fg), 0.08)', paddingTop: '0.65rem', display: 'flex', flexDirection: 'column', gap: '0.45rem' }}>
+            <div style={{ fontSize: '0.68rem', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
               Execution Policy & Toggles:
             </div>
 
-            <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', fontSize: '0.8rem', color: '#e2e8f0' }}>
+            <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', fontSize: '0.8rem', color: 'var(--text-primary)' }}>
               <span>Automatic Failover Cascade</span>
               <input
                 type="checkbox"
                 checked={config.enableFallback}
                 onChange={handleToggleFallback}
-                style={{ cursor: 'pointer', accentColor: '#38bdf8' }}
+                style={{ cursor: 'pointer', accentColor: 'var(--accent-cyan)' }}
               />
             </label>
 
-            <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', fontSize: '0.8rem', color: '#e2e8f0' }}>
+            <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', fontSize: '0.8rem', color: 'var(--text-primary)' }}>
               <span title="Strictly forbids all outbound cloud calls (Google/Groq)">Local-Only Mode (Zero Cloud)</span>
               <input
                 type="checkbox"
                 checked={config.localOnlyMode}
                 onChange={handleToggleLocalOnly}
-                style={{ cursor: 'pointer', accentColor: '#10b981' }}
+                style={{ cursor: 'pointer', accentColor: 'var(--accent-emerald)' }}
               />
             </label>
 
-            <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', fontSize: '0.8rem', color: config.simulateFailure ? '#f87171' : '#cbd5e1' }}>
+            <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', fontSize: '0.8rem', color: config.simulateFailure ? 'var(--accent-rose)' : 'var(--text-secondary)' }}>
               <span title="Demonstrate automatic cloud failure recovery to judges">Simulate Cloud Failure (Demo Mode)</span>
               <input
                 type="checkbox"
                 checked={config.simulateFailure}
                 onChange={handleToggleSimulateFailure}
-                style={{ cursor: 'pointer', accentColor: '#ef4444' }}
+                style={{ cursor: 'pointer', accentColor: 'var(--accent-rose)' }}
               />
             </label>
           </div>
 
           {/* Status Note Footer */}
-          <div style={{ marginTop: '0.65rem', borderTop: '1px solid rgba(255, 255, 255, 0.08)', paddingTop: '0.45rem', fontSize: '0.68rem', color: '#94a3b8' }}>
+          <div style={{ marginTop: '0.65rem', borderTop: '1px solid rgba(var(--rgb-fg), 0.08)', paddingTop: '0.45rem', fontSize: '0.68rem', color: 'var(--text-secondary)' }}>
             {lastChecked && <div>Health verified: {lastChecked}</div>}
-            <div style={{ fontStyle: 'italic', marginTop: '2px', color: '#64748b' }}>
+            <div style={{ fontStyle: 'italic', marginTop: '2px', color: 'var(--text-muted)' }}>
               Keys stored server-side. Zero API credentials in browser bundles.
             </div>
           </div>

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { CountryFlag } from '@/components/CountryFlag';
 import { PilotProposal, ProposalMilestone, ProposalKpi, RaciItem, ProposalStatus } from '@/types';
 import { downloadFile, formatProposalMarkdown } from '@/lib/exportUtils';
 import { downloadProposalPdf } from '@/lib/pdfExport';
@@ -222,7 +223,7 @@ export function ProposalWorkspace({ proposal, onSave, onBack }: ProposalWorkspac
                 v{currentProposal.version}.0 • ID: {currentProposal.id}
               </span>
               {currentProposal.nextAction && (
-                <span style={{ fontSize: '0.75rem', color: 'var(--accent-cyan)', background: 'rgba(14, 165, 233, 0.1)', padding: '0.15rem 0.5rem', borderRadius: '4px' }}>
+                <span style={{ fontSize: '0.75rem', color: 'var(--accent-cyan)', background: 'rgba(var(--rgb-blue), 0.1)', padding: '0.15rem 0.5rem', borderRadius: '4px' }}>
                   Next: {currentProposal.nextAction}
                 </span>
               )}
@@ -329,8 +330,8 @@ export function ProposalWorkspace({ proposal, onSave, onBack }: ProposalWorkspac
         {currentProposal.status === 'Approved' && (
           <div
             style={{
-              background: 'rgba(16, 185, 129, 0.08)',
-              border: '1px solid rgba(16, 185, 129, 0.3)',
+              background: 'rgba(var(--rgb-blue), 0.08)',
+              border: '1px solid rgba(var(--rgb-blue), 0.3)',
               borderRadius: 'var(--radius-md)',
               padding: '1rem 1.25rem',
               marginBottom: '1rem',
@@ -368,8 +369,8 @@ export function ProposalWorkspace({ proposal, onSave, onBack }: ProposalWorkspac
         {currentProposal.status === 'Rejected' && (
           <div
             style={{
-              background: 'rgba(244, 63, 94, 0.08)',
-              border: '1px solid rgba(244, 63, 94, 0.3)',
+              background: 'rgba(var(--rgb-red), 0.08)',
+              border: '1px solid rgba(var(--rgb-red), 0.3)',
               borderRadius: 'var(--radius-md)',
               padding: '1rem 1.25rem',
               marginBottom: '1rem'
@@ -406,11 +407,11 @@ export function ProposalWorkspace({ proposal, onSave, onBack }: ProposalWorkspac
           className="card no-print"
           style={{
             background: currentProposal.generationMetadata?.gatewayExecution?.fallbackUsed
-              ? 'rgba(245, 158, 11, 0.04)'
-              : 'rgba(59, 130, 246, 0.03)',
+              ? 'rgba(var(--rgb-yellow), 0.04)'
+              : 'rgba(var(--rgb-blue), 0.03)',
             border: currentProposal.generationMetadata?.gatewayExecution?.fallbackUsed
-              ? '1px solid rgba(245, 158, 11, 0.25)'
-              : '1px solid rgba(59, 130, 246, 0.2)',
+              ? '1px solid rgba(var(--rgb-yellow), 0.25)'
+              : '1px solid rgba(var(--rgb-blue), 0.2)',
             borderRadius: 'var(--radius-md)',
             padding: '0.85rem 1.15rem',
             marginBottom: '1rem',
@@ -420,7 +421,7 @@ export function ProposalWorkspace({ proposal, onSave, onBack }: ProposalWorkspac
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem', flexWrap: 'wrap', gap: '0.5rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <span style={{ fontWeight: 700, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: currentProposal.generationMetadata?.gatewayExecution?.fallbackUsed ? '#f59e0b' : '#10b981', display: 'inline-block' }} />
+                <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: currentProposal.generationMetadata?.gatewayExecution?.fallbackUsed ? 'var(--accent-amber)' : 'var(--accent-emerald)', display: 'inline-block' }} />
                 AI Gateway Execution Audit
               </span>
               {currentProposal.generationMetadata?.gatewayExecution?.isCachedResult && (
@@ -482,14 +483,14 @@ export function ProposalWorkspace({ proposal, onSave, onBack }: ProposalWorkspac
           </div>
 
           {currentProposal.generationMetadata?.usedFallback && currentProposal.generationMetadata?.errorNote && (
-            <div style={{ marginTop: '0.5rem', paddingTop: '0.4rem', borderTop: '1px dashed rgba(245, 158, 11, 0.3)', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+            <div style={{ marginTop: '0.5rem', paddingTop: '0.4rem', borderTop: '1px dashed rgba(var(--rgb-yellow), 0.3)', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
               <strong>Failover Cascade Rationale:</strong> {currentProposal.generationMetadata.errorNote}
             </div>
           )}
         </div>
 
         {/* Executive Header Box */}
-        <div className="card" style={{ background: 'rgba(255, 255, 255, 0.02)' }}>
+        <div className="card" style={{ background: 'rgba(var(--rgb-fg), 0.02)' }}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem' }}>
             <div>
               <span className="badge badge-supplied" style={{ marginBottom: '0.35rem' }}>Your Company</span>
@@ -499,7 +500,7 @@ export function ProposalWorkspace({ proposal, onSave, onBack }: ProposalWorkspac
             <div>
               <span className="badge badge-verified" style={{ marginBottom: '0.35rem' }}>Matched Tech Startup</span>
               <h2 style={{ fontSize: '1.15rem', fontWeight: 700 }}>
-                {currentProposal.startupName} <span className="badge badge-country">{currentProposal.startupCountry}</span>
+                {currentProposal.startupName} <CountryFlag code={currentProposal.startupCountry} />
               </h2>
               <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Solution Provider</span>
             </div>
@@ -580,7 +581,7 @@ export function ProposalWorkspace({ proposal, onSave, onBack }: ProposalWorkspac
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem' }}>
-            <div style={{ background: 'rgba(0, 0, 0, 0.25)', padding: '1.25rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)' }}>
+            <div style={{ background: 'var(--bg-sunken)', padding: '1.25rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
                 <span className="badge badge-supplied">🏢 [YOUR COMPANY]</span>
                 <h3 style={{ fontSize: '0.95rem', fontWeight: 700 }}>What Needs to Be Solved</h3>
@@ -590,7 +591,7 @@ export function ProposalWorkspace({ proposal, onSave, onBack }: ProposalWorkspac
               </p>
             </div>
 
-            <div style={{ background: 'rgba(0, 0, 0, 0.25)', padding: '1.25rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)' }}>
+            <div style={{ background: 'var(--bg-sunken)', padding: '1.25rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
                 <span className="badge badge-ai">🤖 [AI SUGGESTION]</span>
                 <h3 style={{ fontSize: '0.95rem', fontWeight: 700 }}>How the Startup Will Help</h3>
@@ -639,7 +640,7 @@ export function ProposalWorkspace({ proposal, onSave, onBack }: ProposalWorkspac
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '1.25rem' }}>
             {/* In-Scope */}
-            <div style={{ background: 'rgba(16, 185, 129, 0.05)', border: '1px solid rgba(16, 185, 129, 0.2)', borderRadius: 'var(--radius-md)', padding: '1.25rem' }}>
+            <div style={{ background: 'rgba(var(--rgb-blue), 0.05)', border: '1px solid rgba(var(--rgb-blue), 0.2)', borderRadius: 'var(--radius-md)', padding: '1.25rem' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
                 <h3 style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--accent-emerald)', margin: 0 }}>
                   ✓ In-Scope (What We WILL Do)
@@ -701,7 +702,7 @@ export function ProposalWorkspace({ proposal, onSave, onBack }: ProposalWorkspac
             </div>
 
             {/* Out-of-Scope */}
-            <div style={{ background: 'rgba(244, 63, 94, 0.05)', border: '1px solid rgba(244, 63, 94, 0.2)', borderRadius: 'var(--radius-md)', padding: '1.25rem' }}>
+            <div style={{ background: 'rgba(var(--rgb-red), 0.05)', border: '1px solid rgba(var(--rgb-red), 0.2)', borderRadius: 'var(--radius-md)', padding: '1.25rem' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
                 <h3 style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--accent-rose)', margin: 0 }}>
                   ✕ Out-of-Scope (What We WILL NOT Do)
@@ -763,7 +764,7 @@ export function ProposalWorkspace({ proposal, onSave, onBack }: ProposalWorkspac
             </div>
           </div>
 
-          <div style={{ background: 'rgba(0, 0, 0, 0.25)', padding: '1.25rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)', fontSize: '0.875rem' }}>
+          <div style={{ background: 'var(--bg-sunken)', padding: '1.25rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)', fontSize: '0.875rem' }}>
             <strong style={{ color: 'var(--accent-cyan)' }}>System Connection & Data Safety: </strong>
             <span style={{ color: 'var(--text-secondary)' }}>{currentProposal.integrationArchitecture}</span>
           </div>
@@ -1066,13 +1067,13 @@ export function ProposalWorkspace({ proposal, onSave, onBack }: ProposalWorkspac
             )}
           </div>
 
-          <div style={{ background: 'rgba(14, 165, 233, 0.06)', border: '1px solid rgba(14, 165, 233, 0.2)', padding: '0.65rem 1rem', borderRadius: 'var(--radius-sm)', marginBottom: '1rem', fontSize: '0.8rem', color: 'var(--accent-cyan)' }}>
+          <div style={{ background: 'rgba(var(--rgb-blue), 0.06)', border: '1px solid rgba(var(--rgb-blue), 0.2)', padding: '0.65rem 1rem', borderRadius: 'var(--radius-sm)', marginBottom: '1rem', fontSize: '0.8rem', color: 'var(--accent-cyan)' }}>
             ℹ <strong>Helpful Note:</strong> These target numbers are starting estimates to test during the trial. Actual numbers will be confirmed in the first two weeks of the project.
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.25rem' }}>
             {currentProposal.kpis.map((kpi, kIdx) => (
-              <div key={kpi.id} style={{ background: 'rgba(255, 255, 255, 0.02)', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-md)', padding: '1.25rem' }}>
+              <div key={kpi.id} style={{ background: 'rgba(var(--rgb-fg), 0.02)', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-md)', padding: '1.25rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--accent-cyan)', textTransform: 'uppercase' }}>
                     Goal #{kIdx + 1}
@@ -1175,7 +1176,7 @@ export function ProposalWorkspace({ proposal, onSave, onBack }: ProposalWorkspac
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.25rem', marginBottom: '1.5rem' }}>
-            <div style={{ background: 'rgba(0, 0, 0, 0.25)', padding: '1.25rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)' }}>
+            <div style={{ background: 'var(--bg-sunken)', padding: '1.25rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)' }}>
               <h3 style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '0.5rem' }}>
                 Risks & How We Prevent Them
               </h3>
@@ -1189,7 +1190,7 @@ export function ProposalWorkspace({ proposal, onSave, onBack }: ProposalWorkspac
               </ul>
             </div>
 
-            <div style={{ background: 'rgba(0, 0, 0, 0.25)', padding: '1.25rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)' }}>
+            <div style={{ background: 'var(--bg-sunken)', padding: '1.25rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
                 <span className="badge badge-verified">✅ [CONFIRMED]</span>
                 <h3 style={{ fontSize: '0.9rem', fontWeight: 700 }}>Where Data Will Be Stored</h3>
@@ -1202,7 +1203,7 @@ export function ProposalWorkspace({ proposal, onSave, onBack }: ProposalWorkspac
 
           {/* Legal Advisory Disclaimer */}
           <div className="legal-box">
-            <div style={{ fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.35rem', color: '#fbbf24' }}>
+            <div style={{ fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.35rem', color: 'var(--accent-amber)' }}>
               ⚖ Important Notice & Legal Disclaimer
             </div>
             <div>{currentProposal.legalDisclaimer}</div>
@@ -1221,7 +1222,7 @@ export function ProposalWorkspace({ proposal, onSave, onBack }: ProposalWorkspac
               </button>
             </div>
 
-            <div style={{ background: 'rgba(245, 158, 11, 0.08)', border: '1px solid rgba(245, 158, 11, 0.25)', padding: '0.75rem 1rem', borderRadius: 'var(--radius-sm)', marginBottom: '1.25rem', fontSize: '0.825rem', color: 'var(--text-primary)' }}>
+            <div style={{ background: 'rgba(var(--rgb-yellow), 0.08)', border: '1px solid rgba(var(--rgb-yellow), 0.25)', padding: '0.75rem 1rem', borderRadius: 'var(--radius-sm)', marginBottom: '1.25rem', fontSize: '0.825rem', color: 'var(--text-primary)' }}>
               🔒 <strong>Human Approval Required:</strong> By approving, you confirm that your team has reviewed this project plan and is ready to proceed.
               <p style={{ color: 'var(--text-muted)', fontSize: '0.75rem', marginTop: '0.35rem' }}>
                 *Note: The platform does not automatically send emails or sign legal contracts. Formal agreements should follow your company's normal process.
@@ -1374,7 +1375,7 @@ export function ProposalWorkspace({ proposal, onSave, onBack }: ProposalWorkspac
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               {/* PDF Export Option */}
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(14, 165, 233, 0.08)', padding: '1rem', borderRadius: 'var(--radius-md)', border: '1px solid rgba(14, 165, 233, 0.3)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(var(--rgb-blue), 0.08)', padding: '1rem', borderRadius: 'var(--radius-md)', border: '1px solid rgba(var(--rgb-blue), 0.3)' }}>
                 <div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                     <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--accent-cyan)' }}>Official PDF Document (.pdf)</h3>
@@ -1390,7 +1391,7 @@ export function ProposalWorkspace({ proposal, onSave, onBack }: ProposalWorkspac
               </div>
 
               {/* Markdown Option */}
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255, 255, 255, 0.03)', padding: '1rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(var(--rgb-fg), 0.03)', padding: '1rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)' }}>
                 <div>
                   <h3 style={{ fontSize: '0.95rem', fontWeight: 700 }}>Markdown Text (.md)</h3>
                   <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Readable formatted text file with easy-to-read tables.</p>
@@ -1401,7 +1402,7 @@ export function ProposalWorkspace({ proposal, onSave, onBack }: ProposalWorkspac
               </div>
 
               {/* JSON Option */}
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255, 255, 255, 0.03)', padding: '1rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(var(--rgb-fg), 0.03)', padding: '1rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)' }}>
                 <div>
                   <h3 style={{ fontSize: '0.95rem', fontWeight: 700 }}>Raw Data File (.json)</h3>
                   <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Structured file for software developers and system integrations.</p>
@@ -1412,7 +1413,7 @@ export function ProposalWorkspace({ proposal, onSave, onBack }: ProposalWorkspac
               </div>
 
               {/* Copy to Clipboard */}
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255, 255, 255, 0.03)', padding: '1rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(var(--rgb-fg), 0.03)', padding: '1rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)' }}>
                 <div>
                   <h3 style={{ fontSize: '0.95rem', fontWeight: 700 }}>Copy to Clipboard</h3>
                   <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Copy the entire proposal text to your clipboard.</p>
